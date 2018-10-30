@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load bootstrap %}
+    <div class="wrapper wrapper-content animated fadeInRight">
+        <div class="row">
+            <div class="ibox float-e-margins">
+                <div id="ibox-content" class="ibox-title">
+                    <h5> 填写用户详细信息 </h5>
+                </div>
+                <div class="ibox-content">
+                <div class="col-md-8 col-sm-offset-1">
+                    {% if form.errors %}
+                        <div class="alert alert-block alert-danger">
+                            {{ form.errors }}
+                        </div>
+                    {% endif %}
+                    <form class="form-horizontal" method="post" role="form">{% csrf_token %}
+                        {{ data | bootstrap_horizontal }}
+                        <div class="form-group">
+                            <div class="col-sm-5 col-sm-offset-6">
+                                <button class="btn btn-primary" type="submit"> 提交 </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock content %}

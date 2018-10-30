@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block catbar %}
+    <div class="row wrapper border-bottom white-bg page-heading">
+        <div class="col-sm-10">
+            <h2 class="wrapper-title">{{ header_title.1 }}</h2>
+            <ol class="breadcrumb">
+                <li>仪表盘</li>
+                <li>{{ header_title.0 }}</li>
+                <li>{{ header_title.1 }}</li>
+            </ol>
+        </div>
+        <div class="col-sm-2">
+        </div>
+    </div>
+{% endblock %}
+
+
+{% block content %}
+    <div class="row">
+        <div class="col-sm-10">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h4>修改服务组信息</h4>
+                </div>
+                <div class="ibox-content">
+
+
+                    <form class="form-horizontal nice-validator n-yellow" method="POST" id="assetForm">
+                        {% csrf_token %}
+                        <div class="form-group required">
+                            <label for="HostName" class="control-label col-sm-2 col-lg-2 ">{{ form.name.label }}<span class="red-fonts">*</span></label>
+                            <div class=" col-sm-3 col-lg-3">
+                                {{ form.name }}
+                            </div>
+
+                        </div>
+
+
+                        <div class="form-group">
+                            <label for="HostIP" class="control-label col-sm-2 col-lg-2 "> 主机</label>
+                            <div class="col-sm-3">
+                                <select name="host_no_select" id="host_no_select" class="form-control m-b" size="12" multiple>
+                                    {% for host in host_no_select %}
+                                        <option value="{{ host.pk }}">{{ host.name }} - {{ host.ip }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-sm-1">
+                                <div class="btn-group" style="margin-top: 60px;">
+                                    <button type="button" class="btn btn-white" onclick="move_right()"><i class="fa fa-chevron-right"></i></button>
+                                    <button type="button" class="btn btn-white" id="move_left"><i class="fa fa-chevron-left"></i> </button>
+                                </div>
+                            </div>
+                            <div class="col-sm-3">
+                                <select name="host_select" id="host_select" class="form-control m-b" size="12" multiple>
+                                    {% for host in host_select %}
+                                        <option value="{{ host.pk }}">{{ host.name }} - {{ host.ip }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group required">
+                            <label for="HostIP" class="control-label col-sm-2 col-lg-2 ">{{ form.remark.label }}<span class="red-fonts">*</span></label>
+                            <div class=" col-sm-3 col-lg-7">
+                                {{ form.remark }}
+                            </div>
+                        </div>
+
+                        <div class="hr-line-dashed"></div>
+                        <div class="form-group">
+                            <div class="col-sm-8 col-sm-offset-1">
+                                <button type="reset" class="btn btn-default">恢复</button>
+                            </div>
+                            <div class="col-sm-1">
+                                <button type="submit" class="btn btn-primary" onclick="on_submit()">修改</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script type="application/javascript">
+        function move_right(){
+            var lSelect = $("#host_no_select option:selected");
+            lSelect.clone().appendTo("#host_select");
+            lSelect.remove();
+        }
+        $(function(){
+            $("#move_left").click(function(){
+                var lSelect = $("#host_select option:selected");
+                lSelect.clone().appendTo("#host_no_select");
+                lSelect.remove();
+            });
+        });
+        function on_submit(){
+            $("#host_select option").each(
+                    function(){
+                        $(this).prop('selected',true);
+                    }
+            )
+        }
+    </script>
+{% endblock %}

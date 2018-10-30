@@ -1,0 +1,233 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load i18n %}
+{% block content %}
+    <script src="{% static 'js/test.js' %}"></script>
+
+    <div class="row">
+    <div class="col-sm-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h4>主机详细信息表</h4>
+            </div>
+            <div class="ibox-content">
+                <table id="server_list_table" class="table table-striped table-bordered" style="width:100%">
+                    <thead>
+                    <tr>
+                        <th class="text-center"><input type="checkbox" class="ipt_check_all" id="check_all"></th>
+                        <th class="text-center">{% trans 'Hostname' %}</th>
+                        <th class="text-center">{% trans 'IP' %}</th>
+                        <th class="text-center">{% trans '业务组' %}</th>
+                        <th class="text-center">{% trans 'Label' %}</th>
+                        <th class="text-center">{% trans 'Active' %}</th>
+                        <th class="text-center">{% trans 'IDC' %}</th>
+                        <th class="text-center">{% trans 'Hardware' %}</th>
+                        <th class="text-center">{% trans 'Action' %}</th>
+                    </tr>
+                    </thead>
+                </table>
+                <div class="row">
+                    <div class="col-sm-6">
+                        <input type="button" class="btn btn-sm btn-primary" onclick="window.location.href='{% url 'server_add' %}'" value="添加主机">
+                        <input type="button" class="btn btn-danger btn-sm btn_asset_delete_all"  value="删除">
+                        <input type="button" class="btn btn-warning btn-sm btn_asset_deactive_all" value="维护">
+                        <input type="button" class="btn btn-info btn-sm" name="update_button" id="asset_update" value="更新">
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <script>
+        // 初始化表格
+
+        function initTable(){
+            // 表格选项
+
+            var options = {
+                ele : $("#server_list_table"),
+                pageLength : 10,
+                columnDefs: [
+                    {
+                        targets: 1,
+                        createdCell: function(td,cellData,rowData){
+                            {#                        {% url 'server_detail' 'DEFAULT_PK' as the_url  %}#}
+                            var detail_btn = '<a href="#">' + cellData + '</a>';
+                            $(td).html(detail_btn.replace('DEFAULT_PK', rowData.id));
+                        }
+                    },
+                    {
+                        targets: 3,
+                        createdCell: function(td,cellData){
+                            var project_btn = '';
+                            if(cellData.length > 0) {
+                                project_btn += '<span class="label label-success">' + cellData +'</span>'
+                            }else{
+                                project_btn += '<span class="label label-warning"> 暂无分组 </span> ';
+                            }
+                            $(td).html(project_btn);
+                        }
+                    },
+                    {
+                        targets: 4,
+                        createdCell: function(td,cellData){
+                            var label_btn = '';
+                            if(cellData.length > 0){
+                                $.each(cellData,function(i,d){
+                                    label_btn += '<span class="label label-info">' + d + '</span> ';
+                                });
+                            }else {
+                                label_btn = '<span class="label label-warning"> 暂无标签 </span> ';
+                            }
+                            $(td).html(label_btn);
+                        }
+                    },
+                    {
+                        targets: 5,
+                        createdCell: function(td,cellData,rowData){
+                            var is_active_btn = '';
+                            if(cellData == true){
+                                is_active_btn += '<a class="btn btn-primary btn-xs asset_active" type="button" data-uid="'+ rowData.id + '">{% trans "Active"  %}</a>'
+                            }else {
+                                is_active_btn += '<a class="btn btn-danger btn-xs asset_active" type="button"  data-uid="'+ rowData.id + '">{% trans "未激活" %}</a>';
+                            }
+                            $(td).html(is_active_btn);
+                        }
+                    },
+                    {
+                        targets: 7,
+                        createdCell: function (td, cellData) {
+                            if (cellData === 'Unknown'){
+                                $(td).html('<i class="fa fa-circle text-warning">a</i>')
+                            } else if (!cellData) {
+                                $(td).html('<i class="fa fa-circle text-danger">b</i>')
+                            } else {
+                                $(td).html('<span class="glyphicon glyphicon-object-align-bottom">cpu | mem | disk</span>'.replace('cpu',cellData[0]).replace('mem',cellData[1]).replace('disk',cellData[2]))
+                            }
+                        }
+                    },
+                    {
+                        targets : -1,
+                        orderable: false,
+                        createdCell: function(td,cellData,rowData){
+                            var update_btn = '<a class="btn btn-xs btn-info btn_asset_update" data-uid="'+ rowData.id + '">{% trans "Update" %}</a> ';
+                            var del_btn = '<a class="btn btn-xs btn-danger m-l-xs btn_asset_delete" data-uid="'+ rowData.id + '">{% trans "Delete" %}</a>';
+                            $(td).html(update_btn + del_btn);
+                        }
+                    }
+                ],
+                ajax_url: "{% url 'ajax_server_list' %}",
+                columns: [
+                    { data: 'id',name:'id' },
+                    { data: "name" ,name:'name'},
+                    { data: "ip" ,name:'ip'},
+                    { data: "project" ,name:'project'},
+                    { data: "label" ,name:'label',orderable: true},
+                    { data: "is_active",name:'is_active',searchable:false},
+                    { data: "idc" ,name:'idc',orderable: false,searchable:false},
+                    { data: "hardware" , name:'hardware',orderable: false ,searchable:false},
+                    { data: 'id',orderable:false,searchable:false}
+
+                ]
+            };
+            server_table = cmdb.initServerDataTable(options);
+            return server_table
+        }
+
+
+
+        $(document).ready(function(){
+                    initTable();
+                })
+                .on('click','.btn_asset_delete',function(){
+                    var $this = $(this);
+                    var $data_table = $("#server_list_tale").DataTable();
+                    var name = $(this).closest("tr").find(":nth-child(2)").children('a').html();
+                    var uid = $this.data('uid');
+                    var the_url = '{% url "server_del" %}?id=' + uid;
+                    objectDelete($this, name, the_url);
+                    setInterval( function () {
+                        $data_table.ajax.reload();
+                    }, 30000);
+                })
+                .on('click','.btn_asset_update',function(){
+                    var $this = $(this);
+                    var $data_table = $("#server_list_tale").DataTable();
+                    var name = $(this).closest("tr").find(":nth-child(2)").children('a').html();
+                    var uid = $this.data('uid');
+                    var the_url = '{% url "server_update" %}?id=' + uid;
+
+                    //console.log(the_url);
+                    objectActiveChange($this,name,the_url,$data_table);
+                    setTimeout( function () {
+                        $data_table.ajax.reload();
+                        console.log('step 4')
+                    }, 5000);
+
+                })
+                .on('click','.asset_active',function(){
+                    var $this = $(this);
+                    var $data_table = $("#server_list_table").DataTable();
+                    var name = $(this).closest("tr").find(":nth-child(2)").children('a').html();
+                    var uid = $this.data('uid');
+                    var the_url = '{% url "server_change_status" %}?id=' + uid;
+                    objectActiveChange($this,name,the_url,$data_table);
+                    //$data_table
+                })
+                .on('click','.btn_asset_delete_all',function(){
+                    var
+                            $data_table = $("#server_list_table").DataTable(),
+                            obj = new Array(),
+                            name = new Array(),
+                            uid = new Array(),
+                            the_url = '{% url "server_del" %}?id='
+                            ;
+                    $("#server_list_table .ipt_check").each(function(){
+
+                        if($(this).is(":checked")){
+                            obj.push($(this));
+                            uid.push($(this).data('uid'));
+                            name.push($(this).closest("tr").find(":nth-child(2)").children('a').html());
+                        }
+                    });
+
+                    name = name.join(",");
+                    uid = uid.join(",");
+                    the_url += uid;
+                    objectDelete(obj,name,the_url,$data_table);
+                    setTimeout( function () {
+                        $data_table.ajax.reload();
+                    }, 30000);
+                })
+                .on('click','.btn_asset_deactive_all',function(){
+                    var
+                            $data_table = $("#server_list_table").DataTable(),
+                            obj = new Array(),
+                            name = new Array(),
+                            uid = new Array(),
+                            the_url = '{% url "server_change_status" %}?id='
+                            ;
+                    $("#server_list_table .ipt_check").each(function(){
+                        if($(this).is(":checked")){
+                            obj.push($(this));
+                            uid.push($(this).data('uid'));
+                            name.push($(this).closest("tr").find(":nth-child(2)").children('a').html());
+                        }
+                    });
+                    name = name.join(",");
+                    uid = uid.join(",");
+                    the_url += uid;
+                    objectActiveChange(obj,name,the_url,$data_table);
+                    setInterval( function () {
+                        $data_table.ajax.reload();
+                    }, 30000);
+                })
+        ;
+
+
+
+
+    </script>
+
+{% endblock %}

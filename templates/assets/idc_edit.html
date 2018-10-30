@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% load bootstrap %}
+{% block content %}
+    <div class="row">
+        <div class="col-sm-10">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h4>修改IDC信息</h4>
+                </div>
+                <div class="ibox-content">
+
+
+                    <form class="form-horizontal nice-validator n-yellow" method="POST" id="assetForm">
+                        {% csrf_token %}
+                                {{ form |bootstrap_horizontal}}
+
+
+                        <div class="form-group">
+                            <label for="HostIP" class="control-label col-sm-2 col-lg-2 "> 主机</label>
+                            <div class="col-sm-3">
+                                <select name="host_no_select" id="host_no_select" class="form-control m-b" size="12" multiple>
+                                    {% for host in host_no_select %}
+                                        <option value="{{ host.pk }}">{{ host.name }} - {{ host.ip }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-sm-1">
+                                <div class="btn-group" style="margin-top: 60px;">
+                                    <button type="button" class="btn btn-white" onclick="move_right()"><i class="fa fa-chevron-right"></i></button>
+                                    <button id="move_left" type="button" class="btn btn-white"><i class="fa fa-chevron-left"></i></button>
+                                </div>
+                            </div>
+
+                            <div class="col-sm-3">
+                                <select name="host_select" id="host_select" class="form-control m-b" size="12" multiple>
+                                    {% for host in host_select %}
+                                        <option value="{{ host.pk }}">{{ host.name }} - {{ host.ip }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="hr-line-dashed"></div>
+                        <div class="form-group">
+                            <div class="col-sm-8 col-sm-offset-1">
+                                <button type="reset" class="btn btn-default">恢复</button>
+                            </div>
+                            <div class="col-sm-1">
+                                <button type="submit" class="btn btn-primary" onclick="on_submit()">修改</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+    <script type="application/javascript">
+        function move_right(){
+            //console.log("right");
+            var lSelect = $("#host_no_select option:selected");
+            lSelect.clone().appendTo("#host_select");
+            lSelect.remove();
+        }
+        $(function(){
+           $("#move_left").click(function(){
+               //console.log("left");
+               var lSelect = $("#host_select option:selected");
+               lSelect.clone().appendTo("#host_no_select");
+               lSelect.remove();
+           }) ;
+        });
+
+        function on_submit(){
+            $("#host_select option").each(
+                    function(){
+                        $(this).prop('selected',true);
+                    }
+            )
+        }
+    </script>
+{% endblock %}

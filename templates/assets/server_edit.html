@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% load bootstrap %}
+{% load staticfiles %}
+
+{% block content %}
+
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h4>修改主机信息</h4>
+                </div>
+                <div class="ibox-content">
+                    <form class="form-horizontal nice-validator n-yellow" method="POST" id="hostform" style="margin-top: 20px;">
+                        {% csrf_token %}
+                        <div class="col-md-8">
+                            {{ form | bootstrap_horizontal }}
+                        </div>
+
+                        <div class="col-md-7 col-md-offset-6">
+                            <button type="submit" class="btn btn-primary" id="onSubmit">修改</button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock %}

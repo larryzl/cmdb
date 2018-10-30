@@ -1,0 +1,64 @@
+{#{% include 'link_css.html' %}#}
+{#{% include 'script.html' %}#}
+{% extends 'base.html' %}
+{% block content %}
+{% load bootstrap %}
+<style>
+.voilet_backgroup{background: #FFFFFF}
+</style>
+<div class="voilet_backgroup">
+<div class="wrapper wrapper-content animated fadeInRight">
+    <div class="row">
+        <div class="ibox float-e-margins">
+            <div class="ibox-content">
+                <form class="form-horizontal" id="auth_group_from" method="post"  role="form">{% csrf_token %}
+
+                    <div class="form-group"><label class="col-sm-2 control-label"> 权限组 </label>
+                        <div class="col-sm-8"><li class="form-control" >{{ authGroupObj.group_name }}</li></div>
+                        <div class="col-sm-8" hidden="hidden"><input  type="text" name="group_name" value="{{ authGroupObj.uuid }}" class="form-control" readonly="readonly"></div>
+                    </div>
+                    <div class="hr-line-dashed"></div>
+
+                    <div class="form-group"><label class="col-sm-2 control-label"> 资产管理 </label>
+                        <div class="col-sm-3">
+                            {{ data.select_host| bootstrap_horizontal }}
+                            {{ data.add_host| bootstrap_horizontal }}
+                            {{ data.bat_add_host| bootstrap_horizontal }}
+                            {{ data.edit_host| bootstrap_horizontal }}
+                            {{ data.update_host| bootstrap_horizontal }}
+                            {{ data.delete_host| bootstrap_horizontal }}
+                        </div>
+                    </div>
+
+                    <div class="hr-line-dashed"></div>
+
+
+                    <div class="form-group">
+                       <div class="col-sm-4 col-sm-offset-5">
+                           <button class="btn btn-white" type="submit"> 提交 </button>
+                       </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+<script>
+    $(document).ready(function(){
+          $('.btn-primary').click(function(){
+            jQuery.ajax({
+              url: $(this).attr('href'),                  // 提交的页面
+              data: $('#auth_group_from').serialize(), // 从表单中获取数据
+              type: "POST",                       // 设置请求类型为"POST"，默认为"GET"
+              dataType:'text',
+              success: function(msg){
+                  var index = parent.layer.getFrameIndex(window.name); //获取当前窗体索引
+                              parent.layer.close(index); //执行关闭
+              }
+            });
+          });
+          return false;
+    });
+ </script>
+{% endblock content %}

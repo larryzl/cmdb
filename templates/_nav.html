@@ -1,0 +1,116 @@
+{% load i18n %}
+<li id="index">
+    <a href="{% url 'index' %}">
+        <i class="fa fa-dashboard" style="width: 14px"></i> <span class="nav-label">{% trans 'Dashboard' %}</span>
+        <span class="label label-info pull-right"></span>
+    </a>
+</li>
+
+
+
+<li id="users" >
+
+    <a href="#" aria-expanded="true" >
+    <i class="fa fa-edit"></i>用户管理
+    <span class="fa arrow"></span>
+    </a>
+    <ul class="nav nav-second-level" >
+        <li id="user" ><a href="{% url 'user_list' %}">用户管理</a></li>
+        <li id="department"><a href="{% url 'department_list' %}">部门管理</a></li>
+    </ul>
+</li>
+
+
+<li id="assets">
+    <a href="#" aria-expanded="true" >
+    <i class="fa fa-edit"></i>资产管理
+    <span class="fa arrow"></span>
+    </a>
+     <ul class="nav nav-second-level" >
+        <li id="idc"><a href="{% url 'idc_list' %}">机房管理</a></li>
+        <li id="server"><a href="{% url 'server_list' %}">主机管理</a></li>
+        <li id="project"><a href="{% url 'project_list' %}">业务组管理</a></li>
+        <li id="lable"><a href="{% url 'lable_list' %}">标签管理</a></li>
+    </ul>
+</li>
+<li id="auth">
+    <a href="#" aria-expanded="true" >
+        <i class="fa fa-edit"></i>权限管理
+        <span class="fa arrow"></span>
+    </a>
+    <ul class="nav nav-second-level" >
+        <li id="auth-group"><a href="{% url 'auth_list' %}" id="hrule">访问权限管理</a></li>
+        <li><a href="auth-assets" id="crule">主机权限管理</a></li>
+        <li><a href="auth-cmd" id="crule">命令授权管理</a></li>
+
+    </ul>
+</li>
+<li id="jobs">
+    <a href="#" aria-expanded="true">
+        <i class="fa fa-pencil"></i>任务管理
+        <span class="fa arrow"></span>
+    </a>
+    <ul class="nav nav-second-level" >
+        {#                    <li><a href="{% url 'module_list' %}" id="module">模块管理</a></li>#}
+        <li id="ansible"><a href="{% url 'ansible_index' %}">主机操作</a></li>
+        <li><a href="{% url 'cron_job' %}">定时任务</a></li>
+        <li><a href="{% url 'job_log' %}">任务日志</a></li>
+    </ul>
+</li>
+
+<li id="files">
+    <a href="#" aria-expanded="true">
+        <i class="fa fa-pencil"></i>文件管理
+        <span class="fa arrow"></span>
+    </a>
+    <ul class="nav nav-second-level" >
+        {#                    <li><a href="{% url 'module_list' %}" id="module">模块管理</a></li>#}
+        <li id="list"><a href="{% url 'file_list' %}">文件列表</a></li>
+        <li id="upload"><a href="{% url 'upload' %}">上传文件</a></li>
+    </ul>
+</li>
+
+
+
+
+
+
+
+
+<script>
+    $(function() {
+        $('#side-menu').metisMenu(
+                //activeClass: 'active';
+        );
+    });
+</script>
+
+<script>
+    //导航栏状态
+    var
+            wra = "",
+            url_array = document.location.pathname.split("/"),
+
+            s1 = url_array[1],
+            s2 = url_array[2],
+            s3 = url_array[3]
+    ;
+
+    if (s1 == ''){
+        $('#index').addClass('active')
+    } else {
+        $("#"+s1).addClass('active');
+        $("#"+s2).addClass('active');
+    }
+
+
+    (function ($) {
+                $.getUrlParam = function (name) {
+                    var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+                    var r = window.location.search.substr(1).match(reg);
+                    if (r != null) return unescape(r[2]); return null;
+                }
+    })(jQuery);
+
+</script>
+

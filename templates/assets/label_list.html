@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load i18n %}
+{% block content %}
+    <script src="{% static 'js/test.js' %}"></script>
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h4>机房详细信息表</h4>
+                </div>
+                <div class="ibox-content">
+                    <table id="assets_list_table" class="display">
+                        <thead>
+                        <tr>
+                            <th>业务名称</th>
+                            <th>说明</th>
+                            <th>主机数量</th>
+                            <th>操作</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for l in labels %}
+                            <tr>
+                                <td>{{ l.name }}</td>
+                                <td>{{ l.remark}}</td>
+                                <td><a href="{% url 'server_list' %}?idc={{ l.uuid }}">{{ l.server_set.all.count | default:"0" }}</a></td>
+                                <td>
+                                    <a href="{% url 'lable_edit' l.uuid %}" class="btn btn-xs btn-info">编辑</a>
+                                    <a class="btn btn-xs btn-danger asset_del" data-uid="{{ l.uuid }}" >删除</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                 <div class="row">
+                    <div class="col-sm-6">
+                        <input type="button" class="btn btn-sm btn-primary" onclick="window.location.href='{% url 'lable_add' %}'" value="添加标签">
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        function initTable(){
+            var options = {
+                ele : $("#assets_list_table"),
+                pageLength: 10,
+                columns : [
+                    {data: 'l_name'},
+                    {data: 'l_type'},
+                    {data: 'l_server_total'},
+                    {data: 'l_uuid',orderable: false}
+                ]
+            };
+            return cmdb.initDataTable(options);
+        }
+
+        $(document).ready( function () {
+                    //$('#assets_list_table').DataTable();
+                    initTable();
+                })
+                .on('click','.asset_del',function(){
+                    console.log('this step1');
+                    var $this = $(this);
+                    var $data_table = $("#assets_list_tale").DataTable();
+                    var name = $(this).closest("tr").children().first().html();
+                    var uid = $this.data('uid');
+                    var the_url = "{% url 'project_del' %}?id=" + uid;
+                    objectDelete($this, name, the_url);
+                    setTimeout( function () {
+                        $data_table.ajax.reload();
+                        console.log('step 4')
+                    }, 1000);
+                })
+        ;
+    </script>
+{% endblock %}

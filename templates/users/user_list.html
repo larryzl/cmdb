@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h4>用户列表</h4>
+                </div>
+                <div class="ibox-content">
+                    <form id="host_form">
+                    {% if request.user.is_superuser or request.session.fun_auth.edit_user %}
+                        <div class="col-sm-2" style="padding-left: 0;">
+                            <a type="button" href="{% url 'user_add' %}" class="btn btn-primary btn-sm" name="update_button" id="user_add">添加用户</a>
+                        </div>
+                    {% endif %}
+
+                        <!-- Single button -->
+
+
+                        <table class="table table-striped table-bordered table-hover ">
+                            <thread>
+                                <tr>
+                                    <th>用户名</th>
+                                    <th>姓名</th>
+                                    <th>部门</th>
+                                    <th>角色</th>
+                                    <th>邮箱</th>
+                                    <th>主机数量</th>
+                                    <th>激活</th>
+                                    <th>注册时间</th>
+                                    <th>上次登录时间</th>
+                                    <th>操作</th>
+
+
+                                </tr>
+                            </thread>
+                            <tbody class="list">
+
+                            {% for user in users %}
+
+                                <tr id={{ user.pk }}>
+
+                                    <td>{{ user.username }}</td>
+                                    <td>{{ user.first_name }}</td>
+                                    {% if user.department %}
+                                        <td>{{ user.department.department_name }}</td>
+                                    {% else %}
+                                        <th>没有分组</th>
+                                    {% endif %}
+
+                                    <td>
+                                        {% if user.is_superuser %}
+                                            超级管理员
+                                        {% else %}
+                                            普通用户
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ user.email }}</td>
+                                    <td>
+                                    </td>
+                                    <td>
+                                        {% if user.is_active and user.is_staff%}
+                                            <i class="fa fa-check-circle-o" style="color:#279048">正常</i>
+                                        {% elif not user.is_staff and user.is_active %}
+                                            <i class="fa fa-ban">禁用</i>
+                                        {% else %}
+                                            <i class="fa fa-ban">离职</i>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ user.date_joined }}</td>
+                                    <td>
+                                        {% if user.last_login == None %}
+                                            未登录
+                                        {% else %}
+                                            {{ user.last_login }}
+                                        {% endif %}
+                                    </td>
+
+                                <td>
+                                        {% if request.user.is_superuser or request.session.fun_auth.edit_user %}
+
+                                            <a href="{% url 'user_edit' user.uuid %}" class="btn btn-xs btn-info">修改</a>
+                                            {% if not i.is_staff and i.is_active %}
+                                                <a href="/accounts/status/{{ i.id }}/" class="btn btn-success btn-xs status"></i>恢复</a>
+                                            {% else %}
+                                                 <a href="/accounts/status/{{ i.id }}/" class="btn btn-xs btn-warning status"></i>禁用</a>
+                                                {% endif %}
+                                            <a href="{% url 'user_del' user.pk %}" class="btn btn-xs btn-danger status">删除</a>
+
+                                            {% else %}
+                                            没有权限
+                                        {% endif %}
+                                        </td>
+
+
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <script type="application/javascript">
+        //获取选中值
+        function getCheckbox(){
+            var
+                    $GroupList = $('input[name="item_checkbox"]:checked'),
+                    check_id_list = [],
+                    check_name_list = []
+                    ;
+
+            $GroupList.each(function(){
+                check_id_list.push($(this).val());
+                var delName = $(this).parents('tr').children().eq(2).text().replace(/ /g,'').replace(/\n/g,'');
+                console.log(delName);
+                check_name_list.push(delName);
+
+            });
+            return ([check_id_list,check_name_list]);
+        }
+        //删除用户
+
+
+        //加载用户组
+        $('.selectpicker').on('changed.bs.select',function(){
+            var
+                    group_list = [],
+                    groups = $("#group_select").val()
+            ;
+            for(var g in groups){
+                group_list.push(g);
+            }
+            if(group_list.length > 0) {
+                getGroupData(groups.join(','));
+            }else{
+                $(".list tr").each(function(){
+                    $(this).show();
+                });
+            }
+        });
+        //
+        function getGroupData(group){
+
+            $.ajax({
+                url: "{% url 'user_list' %}",
+                type: "GET",
+                data: {
+                    "groups":group
+                },
+                success : function(data) {
+                    //var col = $(".list").find("tr").prevAll().length;
+                    var trs = $(".list tr");
+                    trs.each(function(){
+                        $(this).show();
+                    });
+
+                    var dataObj = data;
+                    $.each(dataObj,function(index,item){
+                        $("#"+item.pk).hide();
+                    });
+
+                }
+            })
+        }
+
+
+
+    </script>
+
+{% endblock %}

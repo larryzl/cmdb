@@ -1,0 +1,33 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+{#<html xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html">#}
+
+<head>
+    <head data-suburl="">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="author" content="运维管理系统" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>CMDB-{{ title }}</title>
+
+    {% include '_head_css_js.html' %}
+
+    {% block head %} {% endblock %}
+
+</head>
+<body>
+<div id="wrapper">
+{% include '_left_side_bar.html' %}
+<div id="page-wrapper" class="gray-bg">
+  {% include '_header_bar.html' %}
+    {% include '_catbar.html' %}
+    {% block content %}{% endblock %}
+</div>
+</div>
+
+
+</body>
+{% include '_foot_js.html' %}
+{% block custom_foot_js %} {% endblock %}
+</html>

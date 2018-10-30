@@ -1,0 +1,216 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% block content %}
+    <style>
+
+        .alert{padding-left: 0;margin-left:0;margin-top:8px;}
+        .voilet {padding-left: 0;margin-left:0;}
+        .form-group .checkbox-inline{margin-left:8px;}
+        .voilet_test {padding-top: 50px;}
+
+    </style>
+    <pre>请选择需要执行命令的主机</pre>
+    <div class="col-md-10"  style="padding-left: 0px;">
+        <select class="selectpicker" id="idc" multiple data-selected-text-format="count" title="选择IDC" >
+            {% for idc in idcs %}
+                <option value="{{ idc.uuid }}">{{ idc.name }}</option>
+            {% endfor %}
+        </select>
+        <select class="selectpicker" id="project" multiple data-selected-text-format="count > 3" title="选择业务组">
+            {% for p in projects %}
+                <option value="{{ p.uuid }}">{{ p.name }}</option>
+            {% endfor %}
+        </select>
+
+        <select class="selectpicker" id="label" multiple data-selected-text-format="count > 3"  title="选择标签">
+            {% for l in labels %}
+                <option value="{{ l.uuid }}">{{ l.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="voilet">
+        <form method="POST" id="reasonform">
+            {% csrf_token %}
+            <div class="">
+                <div class="voilet_test">
+                    <div class="checkbox">
+                        {% for i in server_all %}
+                            <label>
+                                <input type="checkbox" name="server_id" value="{{ i.id }}">
+                                {{ i.name }}
+                            </label>
+                        {% endfor %}
+                    </div>
+                    <button type="button" class="btn btn-info btn-xs" id="checkAll">全选/反选</button>
+                    <div class="alert alert-dismissable ">
+                        <div id="node_name"></div>
+                    </div>
+
+                </div>
+
+
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="input-group">
+                            <span class="input-group-btn">
+                                <button class="btn btn-default disabled" type="button">命令</button>
+                            </span>
+                            <input type="text" class="form-control" name="ansible_cmd" id="ansible_cmd" placeholder="如:ifconfig  命令可连输哦，如ls;pwd;uname -a中间以;做分割" maxlength="100" size="100"/>
+                            <span class="input-group-addon ">命令类型
+                                <select id="id_brand"  name="comm_shell">
+                                    <option value="shell" selected="selected">shell</option>
+                                    <option value="copy">copy</option>
+                                    <option value="ping">ping</option>
+                                </select>
+                            </span>
+                            <span class="input-group-btn">
+                                <button class="btn btn-success" id="button" type="submit">执行</button>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+
+<div class="panel panel-default" id="ansible_res">
+</div>
+
+
+
+    <script type="text/javascript">
+        //全选 反选
+        $('#checkAll').click(function(){
+            $("input[name='server_id']:checkbox").each(function(){
+                if(this.checked) {
+                    $(this).prop("checked",false)
+                }else {
+                    $(this).prop("checked",true)
+                }
+            });
+        });
+
+
+
+        // 执行命令
+        $(document).ready(function(){
+            $('#button').click(function(){
+                var obj = document.getElementsByName("server_id");
+                var check_val = new Array;
+                for(k in obj){
+                    if(obj[k].checked)
+                        check_val.push(obj[k].value);
+                }
+                var server_id = check_val.join(",");
+
+                var form = {
+                    'server_id':server_id,
+                    'ansible_cmd':$("#ansible_cmd").val(),
+                    'comm_shell':$("#id_brand").val()
+                };
+                //console.log(form);
+
+                var ajx_url = "{% url 'ansible_cmd' %}";
+
+                jQuery.ajax({
+                    url: ajx_url,                  // 提交的页面
+                    data: form, // 从表单中获取数据
+                    type: 'POST',                       // 设置请求类型为"POST"，默认为"GET"
+                    dataType:'json',
+                    headers:{'Content-Type':"application/x-www-form-urlencoded"},
+                    beforeSend: function(){             // 设置表单提交前方法
+                        //alert('表单提交前');
+                        var msg_info = "";
+                        if(check_val.length == 0){
+                            msg_info += "请选择需要执行命令的主机<br>";
+                            $("#node_name").html('<div class="alert alert-danger" role="alert">'+msg_info+'</div>');
+                        }
+                        if($("#ansible_cmd").val().length == 0){
+                            msg_info += "命令不能为空";
+                        }
+                        if(msg_info.length > 0){
+                            $("#node_name").html('<div class="alert alert-danger" role="alert">'+msg_info+'</div>');
+                            return false;
+                        }
+                    },
+                    error: function(request){           // 设置表单提交出错
+                        $("#node_name").html('<div class="alert alert-danger" role="alert">表单提交出错，请稍候再试</div>');
+                    },
+
+                    success: function(msg){
+                        //var msg_info = "正在执行命令....";
+                        //$("#node_name").html('<div class="alert alert-success" role="alert">'+msg_info+'</div>');
+                        $("#node_name").remove();
+
+
+                        //console.log(msg);
+                        var resault = "";
+                        $.each(msg,function(item,info){
+                            console.log(item,info);
+                            $.each(info,function(ip,detail){
+
+                                resault += '<div class="panel-heading"><span class="label label-primary">' +ip + '</span></div><div class="panel-body">';
+                                $.each(detail['stdout_lines'],function(n,res){
+                                    resault += n+' >> ' + res + "</br></div>"
+                                });
+                            });
+                            //console.log(resault);
+                            $("#ansible_res").html(resault);
+                        });
+                    }
+                });
+                return false;
+            });
+        });
+
+        //根据人员查询业务分类和主机
+
+        $(function(){
+            $(".btn-ajax").click(function(){
+                var url = $(this).attr("href");
+                console.log(url);
+                $.get(url,function(data){
+                    $("#node_name").html(data);
+                })
+
+            });
+        });
+
+
+        $(".selectpicker").on('changed.bs.select',function(){
+
+            var
+                    project = $("#project").val(),
+                    label = $("#label").val(),
+                    idc = $("#idc_select").val()
+                    ;
+            console.log(project);
+
+            var ajax_url = "{% url 'ajax_server_list' %}" ;
+            $.ajax({
+                url: ajax_url,
+                type:'get',
+                dataType:'json',
+                success:function(data){
+                    var checkout_html = "";
+
+                    $.each(data,function(i,item){
+
+                        checkout_html += '<label><input type="checkbox" name="server_id" value="'+i+'">' + item[1] + '</label>';
+
+                    });
+                    $(".checkbox").html(checkout_html);
+                }
+            })
+        })
+
+
+
+
+    </script>
+
+
+
+
+{% endblock content %}

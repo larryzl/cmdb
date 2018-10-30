@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+
+    <div class="row">
+        <div class="col-sm-10">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h4>填写主机信息</h4>
+                </div>
+                <div class="ibox-content">
+                    <ul class="nav nav-tabs" >
+                        <li role="presentation" ><a href="{% url 'server_add' %}">单台添加</a></li>
+                        <li role="presentation" class="active"><a href="{% url 'server_add_batch' %}">批量添加</a></li>
+                    </ul>
+
+
+                    <form class="form-horizontal nice-validator n-yellow" method="POST" id="hostform" style="margin-top: 20px;">
+                        {% csrf_token %}
+                        <div class="form-group required" id="name_form">
+                            <label for="name" class="control-label col-sm-2 col-lg-2 ">主机名前缀<span class="red-fonts">*</span></label>
+                            <div class="col-sm-8 col-lg-8 ">
+                                <input name="name" type="text" class="form-control" placeholder="例如:TEST_">
+                                <span id="name_info"></span>
+                            </div>
+                        </div>
+                        <div class="hr-line-dashed"></div>
+
+                        <div class="form-group required" id="ip_form">
+                            <label for="ip" class="control-label col-sm-2 col-lg-2 ">IP地址<span class="red-fonts">*</span></label>
+                            <div class="col-sm-3" id="ip_list">
+                                <input  name="ip" type="text" class="form-control" placeholder="输入IP地址">
+
+                                <span id="ip_info"></span>
+                            </div>
+                            <div class="col-sm-2">
+                                <button type="button" class="layui-btn layui-btn-primary layui-btn-small" id="AddIP">
+                                    +
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="hr-line-dashed"></div>
+                        <div class="form-group required">
+                            <label for="hostidc"  class="control-label col-sm-2 col-lg-2">
+                                选择IDC <span class="red-fonts">*</span>
+                            </label>
+                            <div class="col-sm-3 col-lg-3">
+                                <select name="idc" id="" class="selectpicker">
+                                    {% for idc in  idcs %}
+                                        <option value="{{ idc.uuid }}">{{ idc.name }}</option>
+                                    {% endfor %}
+
+                                </select>
+                                <span id="idc_info"></span>
+                            </div>
+
+                            <label for="hostos" class="control-label col-sm-2 col-lg-2 text-left">选择操作系统<span class="red-fonts">*</span></label>
+                            <div class="col-sm-3 col-lg-3">
+                                <select name="os" id="" class="selectpicker">
+                                    {% for os in os_list %}
+                                        <option value={{ os.0 }}>{{ os.1 }}</option>
+                                    {% endfor %}
+
+                                </select>
+                                <span id="os_info"></span>
+                            </div>
+                        </div>
+
+                        <div class="hr-line-dashed"></div>
+                        <div class="form-group">
+                            <div class="col-sm-8 col-sm-offset-1">
+                                <button type="reset" class="btn btn-default">重置</button>
+
+                            </div>
+                            <div class="col-sm-1">
+                                <button type="submit" class="btn btn-primary" id="onSubmit">添加</button>
+                            </div>
+
+                        </div>
+                    </form>
+
+
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="application/javascript">
+        $("#AddIP").click(function(){
+            var tr = "<input type='text' name='ip' class='form-control' placeholder='请输入IP地址'></input>";
+
+            $("#ip_list").append(tr);
+        });
+    </script>
+{% endblock %}
+

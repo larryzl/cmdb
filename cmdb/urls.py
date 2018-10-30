@@ -14,8 +14,18 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path,include,re_path
+from .views import index,test_html
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    re_path(r'^$',index,name='index'),
+    re_path(r'^test$',test_html),
+    re_path(r'^assets/',include('assets.urls')),
+    re_path(r'^users/',include('accounts.urls')),
+    re_path(r'^files/',include('files.urls')),
+    re_path(r'^jobs/',include('ansible_api.urls')),
+    re_path(r'^ajax/',include('ajax.urls')),
+    re_path(r'^auth/',include('authorize.urls')),
 ]

@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h4>部门列表</h4>
+                </div>
+
+                <div class="ibox-content">
+                    <form id="host_form">
+                        {% if request.user.is_superuser or request.session.fun_auth.edit_user %}
+                            <div class="col-sm-4" style="padding-left: 0;">
+                                <a type="button" class="btn btn-primary btn-sm" name="update_button" href="{% url 'department_add' %}">添加部门</a>
+                            </div>
+                        {% endif %}
+                        <table class="table table-striped table-bordered table-hover ">
+                            <thread>
+                                <tr>
+                                    <th>部门名称</th>
+                                    <th>管理员</th>
+                                    <th>成员</th>
+                                    <th>部门组</th>
+                                    <th>说明</th>
+                                    <th>操作</th>
+
+                                </tr>
+                            </thread>
+                            <tbody class="list">
+                            {% for k,v in content.items %}
+                                <tr id={{ v.department_id }}>
+                                    <td>{{ k }}</td>
+                                    {% if v.department_admin %}
+                                        <td>{{ v.department_admin }}</td>
+                                    {% else %}
+                                        <td>暂无管理员</td>
+                                    {% endif %}
+                                    <td>
+                                        {% for u in v.user_list %}
+                                            {{ u }}
+                                        {% endfor %}
+                                    </td>
+                                    <td>{{ v.department_group }}</td>
+                                    <td>{{ v.department_desc}}</td>
+
+                                    <td>
+                                        {% if request.user.is_superuser or request.session.fun_auth.edit_user %}
+                                            <a href="{% url 'department_edit' v.department_id %}" class="btn btn-xs btn-info">编辑</a>
+                                            <a onclick="delDepartment({{ v.department_id }})" class="btn btn-xs btn-danger asset_del">删除</a>
+                                        {% else %}
+                                            没有权限
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+
+                            </tbody>
+                        </table>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+
+        function delDepartment(pk){
+            console.log(pk);
+            $("#"+pk).hide();
+            var url = "{% url 'department_del' 'pk' %}".replace('pk',pk);
+
+            $.get(
+                    url
+            )
+        }
+
+    </script>
+
+{% endblock %}

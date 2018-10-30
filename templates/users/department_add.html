@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% load bootstrap %}
+{% block content %}
+
+<style>
+    .voilet_top{margin-top:10px;}
+    .col-sm-10 ul{list-style-type:none;line-height:33px;}
+    .col-sm-10 li{float:left;margin-right:12px;text-align: left;}
+    .n-invalid .form-control {
+    background-color: #FFFFFF;
+    background-image: none;
+    border: 1px solid #ff0000;
+    border-radius: 4px;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset;
+    color: #555555;
+    display: block;
+    font-size: 14px;
+    height: 34px;
+    line-height: 1.42857;
+    padding: 6px 12px;
+    transition: border-color 0.15s ease-in-out 0s, box-shadow 0.15s ease-in-out 0s;
+    vertical-align: middle;
+    width: 100%;
+}
+
+    #signupForm .n-invalid{
+    border: 1px solid #ff0000;
+}
+
+</style>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('.form-horizontal').bootstrapValidator({
+            message: "输入错误",
+            feedbackIcons: {
+                valid: 'glyphicon glyphicon-ok',
+                invalid: 'glyphicon glyphicon-remove',
+                validating: 'glyphicon glyphicon-refresh'
+            },
+            fields: {
+                department_name: {
+                    validators: {
+                        notEmpty: {
+                            message: '部门名称不能为空'
+                        },
+                        stringLength: {
+                            min: 3,
+                            max: 30,
+                            message: '请输入3到30个字符'
+                        }
+                    }
+                },
+                desc_gid: {
+                    validators: {
+                        notEmpty: {
+                            message: '请选择部门组'
+                        }
+                    }
+                }
+            }
+        });
+    });
+
+
+
+</script>
+
+
+<div class="col-md-10 column voilet_top">
+    <form class="form-horizontal" method="post" action="" role="form">{% csrf_token %}
+
+        {{ form|bootstrap_horizontal }}
+        <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-10">
+                <span id="returnMessage" class="glyphicon"> </span>
+                 <button id="submitBtn" type="submit" class="btn btn-success btn-default btn-block">提交</button>
+            </div>
+        </div>
+    </form>
+
+</div>
+
+
+    <script>
+
+
+    </script>
+
+{% endblock content %}
+
+
+    $("#submitBtn").click(function(){
+            $.ajax({
+                url: "{% url 'verifyForm' %}",
+                type: 'POST',
+                headers:{"X-CSRFToken":$.cookie('csrftoken')},
+                data: {
+                    type: "department",
+                    value: {
+                        name: "aaa"
+                    }
+                },
+
+                success: function(result) {
+                    console.log(result);
+                    if (result) {
+                        window.location.reload();
+                    } else {
+                        $("#returnMessage").hide().html('<label class="label label-danger">修改失败!</label>').show(300);
+                    }
+                },error: function(){
+                    $("#returnMessage").hide().html('<label class="label label-danger">修改失败!</label>').show(300);
+                }
+
+            })
+
+    })

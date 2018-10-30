@@ -1,0 +1,16 @@
+[local]
+localhost
+
+[Master:children]
+local
+otherMaster
+
+[otherMaster]
+10.9.97.188
+10.9.167.68
+
+[Node]
+10.9.162.101
+10.9.112.151
+10.9.100.190
+
