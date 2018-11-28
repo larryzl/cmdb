@@ -2,6 +2,8 @@
 __pycache__/
 *.py[cod]
 *$py.class
+upload/
+migrations/
 
 # C extensions
 *.so
@@ -103,3 +105,8 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+*.gz
+ansible_api/migrations/
+assets/migrations/
+authorize/migrations/
+files/migrations/
