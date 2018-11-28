@@ -1,212 +1,569 @@
 {% extends 'base.html' %}
 {% load staticfiles %}
 {% block content %}
-    <style>
-
-        .alert{padding-left: 0;margin-left:0;margin-top:8px;}
-        .voilet {padding-left: 0;margin-left:0;}
-        .form-group .checkbox-inline{margin-left:8px;}
-        .voilet_test {padding-top: 50px;}
-
-    </style>
-    <pre>请选择需要执行命令的主机</pre>
-    <div class="col-md-10"  style="padding-left: 0px;">
-        <select class="selectpicker" id="idc" multiple data-selected-text-format="count" title="选择IDC" >
-            {% for idc in idcs %}
-                <option value="{{ idc.uuid }}">{{ idc.name }}</option>
-            {% endfor %}
-        </select>
-        <select class="selectpicker" id="project" multiple data-selected-text-format="count > 3" title="选择业务组">
-            {% for p in projects %}
-                <option value="{{ p.uuid }}">{{ p.name }}</option>
-            {% endfor %}
-        </select>
-
-        <select class="selectpicker" id="label" multiple data-selected-text-format="count > 3"  title="选择标签">
-            {% for l in labels %}
-                <option value="{{ l.uuid }}">{{ l.name }}</option>
-            {% endfor %}
-        </select>
-    </div>
-    <div class="voilet">
-        <form method="POST" id="reasonform">
-            {% csrf_token %}
-            <div class="">
-                <div class="voilet_test">
-                    <div class="checkbox">
-                        {% for i in server_all %}
-                            <label>
-                                <input type="checkbox" name="server_id" value="{{ i.id }}">
-                                {{ i.name }}
-                            </label>
+    <script src="{% static 'js/layui/layui.js' %}"></script>
+    <script src="{% static 'js/ansible.js' %}"></script>
+<div class="row">
+    <div class="col-sm-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-content">
+                <pre>请选择需要执行命令的主机</pre>
+                <!-- 显示过滤条件 -->
+                <div style="padding-left: 0px; padding-bottom: 10px">
+                    <select class="selectpicker filter_select" id="idc_select" multiple data-selected-text-format="count" title="选择IDC" >
+                        {% for idc in idcs %}
+                            <option value="{{ idc.uuid }}">{{ idc.name }}</option>
                         {% endfor %}
-                    </div>
-                    <button type="button" class="btn btn-info btn-xs" id="checkAll">全选/反选</button>
-                    <div class="alert alert-dismissable ">
-                        <div id="node_name"></div>
-                    </div>
+                    </select>
+                    <select class="selectpicker filter_select" id="project_select" multiple data-selected-text-format="count > 3" title="选择业务组">
+                        {% for p in projects %}
+                            <option value="{{ p.uuid }}">{{ p.name }}</option>
+                        {% endfor %}
+                    </select>
 
+                    <select class="selectpicker filter_select" id="label_select" multiple data-selected-text-format="count > 3"  title="选择标签">
+                        {% for l in labels %}
+                            <option value="{{ l.uuid }}">{{ l.name }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
+                <!-- 选择主机 -->
+                <div class="voilet">
+                    <div class="voilet_test">
+                        <div class="row">
+                            <div class="col-sm-10">
+                                <div class="btn-toolbar" role="toolbar" aria-label="...">
+                                    <div class="btn-group" id="display_host" role="group" aria-label="...">
+                                        <span class="btn-danger">选择过滤条件后显示主机选择按钮</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
+                        <div class="btn-group" style="margin-top: 30px;">
+                            <button type="button" class="btn btn-info btn-xs" id="checkAll"> 全选/反选 </button>
+                        </div>
+                        <div style="margin-top: 20px">
+                            <label class="control-label" for="inputSuccess2"><span class="glyphicon glyphicon-filter"></span>已选主机<span class="badge" id="select_num">0</span>:</label>
+                        </div>
+                        <div class="btn-group" role="group" aria-label="..." style="margin-top: 10px">
+                            <div class="btn-group">
+                                <div id="selected_host">
+                                </div>
+                            </div>
+                        </div>
 
-                <div class="row">
-                    <div class="col-lg-12">
-                        <div class="input-group">
-                            <span class="input-group-btn">
-                                <button class="btn btn-default disabled" type="button">命令</button>
-                            </span>
-                            <input type="text" class="form-control" name="ansible_cmd" id="ansible_cmd" placeholder="如:ifconfig  命令可连输哦，如ls;pwd;uname -a中间以;做分割" maxlength="100" size="100"/>
-                            <span class="input-group-addon ">命令类型
-                                <select id="id_brand"  name="comm_shell">
-                                    <option value="shell" selected="selected">shell</option>
-                                    <option value="copy">copy</option>
-                                    <option value="ping">ping</option>
-                                </select>
-                            </span>
-                            <span class="input-group-btn">
-                                <button class="btn btn-success" id="button" type="submit">执行</button>
-                            </span>
+                        <div class="alert alert-dismissable">
+
                         </div>
                     </div>
                 </div>
+
+                <div>
+                    <!-- Nav tabs -->
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li role="presentation" class="active"><a href="#command" aria-controls="command" role="tab" data-toggle="tab">执行命令</a></li>
+                        <li role="presentation"><a href="#exec_playbook" aria-controls="playbook" role="tab" data-toggle="tab">Playbook</a></li>
+                        <li role="presentation"><a href="#upload_files" aria-controls="upload_files" role="tab" data-toggle="tab">更新文件</a></li>
+                        <li role="presentation"><a href="#exec_scripts" aria-controls="exec_scripts" role="tab" data-toggle="tab">执行脚本</a></li>
+                    </ul>
+
+                    <!-- Tab panes -->
+                    <div class="tab-content">
+                        <!-- 执行 命令 -->
+                        <div role="tabpanel" class="tab-pane active" id="command">
+                            <div class="row" style="margin-top: 20px;">
+                                <form method="POST" id="reasonform">{% csrf_token %}
+{#                                    <div class="col-lg-12">#}
+                                    <div class="input-group">
+                                        <span class="input-group-btn">
+                                            <button class="btn btn-default disabled" type="button">命令</button>
+                                        </span>
+                                        <input type="text" class="form-control" id="ansible_cmd"  placeholder="如:ifconfig  命令可连输哦，如ls;pwd;uname -a中间以;做分割" maxlength="100" size="100"/>
+                                        <span class="input-group-addon ">命令类型
+                                            <select id="id_brand"  name="comm_shell">
+                                                <option value="shell" selected="selected">shell</option>
+                                            </select>
+                                        </span>
+                                        <span class="input-group-btn">
+                                            <button class="btn btn-success btn-ajax-submit" type="submit">执行</button>
+                                        </span>
+                                    </div>
+{#                                    </div>#}
+                                    </form>
+                            </div>
+                    </div>
+                    <!-- 执行 playbook -->
+                    <div role="tabpanel" class="tab-pane" id="exec_playbook">
+                        <div class="form-group has-success has-feedback" style="margin-top: 20px;">
+                            <label class="control-label" for="inputSuccess2"><span class="glyphicon glyphicon-folder-open"></span>    选择Playbook文件</label>
+                            <select class="selectpicker" id="playbook_select">
+                                <option>请选择文件</option>
+                                {% for i in playbook_data %}
+                                    <option value="{{ i.file_id }}" data-content="<span class='label label-info'>{{ i.description }}</span>"></option>
+                                {% endfor %}
+                            </select>
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                            <button type="button" class="btn btn-default btn-add-playbook">添加Playbook</button>
+                            <button type="button" class="btn btn-success btn-playbook btn-view-playbook disabled">预览Playbook</button>
+                            <button type="button" class="btn btn-success btn-playbook btn-playbook-addvar disabled">添加参数</button>
+                            <button class="btn btn-success btn-ajax-submit btn-playbook disabled" type="submit">执行</button>
+                            <button class="btn btn-success btn-test" type="button">test</button>
+                        </div>
+                        <div id="playbook-args"></div>
+                        <div class="playbook_select">
+                            <div class="alert alert-warning alert-dismissible" role="alert">
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                <strong>请选择要更新的文件!</strong>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- 更新文件 -->
+                    <div role="tabpanel" class="tab-pane" id="upload_files">
+                    <div style="margin-top: 20px;">
+                        <form method="POST" id="reasonform">{% csrf_token %}
+                            <div class="form-group has-success has-feedback">
+                                <label class="control-label" for="inputSuccess2"><span class="glyphicon glyphicon-folder-open"></span>    选择要更新的文件</label>
+                                <select class="selectpicker" id="file_select">
+                                    <option>请选择文件</option>
+                                    {% for i in file_data %}
+                                        <option value="{{ i.file_id }}" data-content="<span class='label label-info'>{{ i.description }}</span>"></option>
+                                    {% endfor %}
+                                </select>
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="file_select">
+                                <div class="alert alert-warning alert-dismissible" role="alert">
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                    <strong>请选择要更新的文件!</strong>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="input-group">
+                                        <span class="input-group-btn">
+                                            <button class="btn btn-default disabled" type="button">目标路径</button>
+                                        </span>
+                                        <input type="text" class="form-control" name="file_path" id="file_path" placeholder="请输入目标目录绝对路径,如:/opt " maxlength="100" size="100"/>
+                                        <span class="input-group-btn">
+                                            <button class="btn btn-success btn-ajax-submit"  type="submit">执行</button>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            </form>
+                        </div>
+                    </div>
+
+                        <!-- 执行 脚本 -->
+                        <div role="tabpanel" class="tab-pane" id="exec_scripts">
+                            <div class="form-group has-success has-feedback" style="margin-top: 20px;" >
+                                <label class="control-label" for="inputSuccess2"><span class="glyphicon glyphicon-folder-open"></span>    选择脚本文件</label>
+                                <select class="selectpicker" id="script_select">
+                                    <option>请选择文件</option>
+                                    {% for i in scripts_data %}
+                                        <option value="{{ i.file_id }}" data-content="<span class='label label-info'>{{ i.description }}</span>"></option>
+                                    {% endfor %}
+                                </select>
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                                <button type="button" class="btn btn-default btn-add-script">添加脚本</button>
+                            </div>
+                            <div class="script_select">
+                                <div class="alert alert-warning alert-dismissible" role="alert">
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                    <strong>请选择要更新的文件!</strong>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="input-group">
+                                        <span class="input-group-btn">
+                                            <button class="btn btn-default disabled" type="button">脚本参数</button>
+                                        </span>
+                                        <input type="text" class="form-control" id="script_args" placeholder="请输入脚本参数,如果没有可留空" maxlength="100" size="100"/>
+                                    </div>
+                                </div>
+                                <div class="col-lg-12">
+                                    <div class="input-group">
+                                        <span class="input-group-btn">
+                                            <button class="btn btn-default disabled" type="button">目标路径</button>
+                                        </span>
+                                        <input type="text" class="form-control" name="file_path" id="script_path" placeholder="请输入执行脚本的目录,如:/opt " maxlength="100" size="100"/>
+                                        <span class="input-group-btn">
+                                            <button class="btn btn-success btn-ajax-submit" type="submit">执行</button>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="panel panel-default" id="ansible_res"></div>
+                </div>
             </div>
-        </form>
+        </div>
     </div>
-
-
-<div class="panel panel-default" id="ansible_res">
 </div>
 
 
 
+
     <script type="text/javascript">
-        //全选 反选
-        $('#checkAll').click(function(){
-            $("input[name='server_id']:checkbox").each(function(){
-                if(this.checked) {
-                    $(this).prop("checked",false)
-                }else {
-                    $(this).prop("checked",true)
+
+        // 初始化 按钮方法
+        function ansileInit(){
+            options = {
+                className : "btn-select",   //  选择的按钮class 值
+                btnName : 'btn-select', // 选择的按钮 name 值
+                IDName: 'selected_host' // 显示已选中的按钮id 值
+            };
+            return ansible.initButton(options);
+        }
+
+        function playbookArgs(){
+            var arr = {};
+            $("input[name='key']").each(function(){
+                var key = $(this).val();
+                var value = $(this).next().next().val();
+                if((key != "")&&(value != "")){
+                    arr[key] = value
                 }
+
             });
+            if(arr.length == 0){
+                arr['null'] = "null"
+            }
+            return arr;
+        }
+        $('.btn-test').click(function(){
+            var data = playbookArgs();
+            console.log(data);
         });
 
+        $(".btn-view-playbook").click(function(){var f_uid = $("#playbook_select").val();var url  = '{% url "playbook_view" %}?uid='+ f_uid;layer.open({type:2, area: ['500px', '300px'], maxmin: true, title: ['Playbook 预览','font-size:13px;margin-top:10px;'], content: url});});
 
+        $("#checkAll").click(function(){ansible.checkAll();});
+        $(".btn-playbook-addvar").click(function(){
+            var tr = '<div class="row" style="margin-left:0px">' +
+                    '<div class="alert alert-info alert-dismissible col-sm-6" role="alert"> ' +
+                    ' <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
+                    '<div class="input-group playbook-input"> ' +
+                    '<span class="input-group-btn"> ' +
+                    '<button class="btn btn-success" disabled type="button">Key</button> ' +
+                    '</span> ' +
+                    '<input type="text" name="key" class="form-control"> ' +
+                    '<span class="input-group-btn"> ' +
+                    '<button class="btn btn-success" disabled type="button">Value</button> ' +
+                    '</span> ' +
+                    '<input type="text" name="value" class="form-control"> ' +
+                    '</div></div> </div>';
+
+
+            $("#playbook-args").append(tr);
+        });
+        function fileSelect(fId,type){
+            $("#"+fId).on('changed.bs.select',function(){
+                var uid = $("#"+fId).val();
+                var ajax_url = "{% url 'ajax_get_file_detail' %}?t="+type+"&id=" + uid;
+                console.log(uid);
+                console.log(ajax_url);
+                $.ajax({
+                    url: ajax_url,
+                    type:'get',
+                    dataType:'json',
+                    success:function(data){
+                        var info_html = '<div class="alert alert-warning alert-dismissible" role="alert"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>';
+
+                        $.each(data,function(i,item){
+                            if(i=='status'){
+                                info_html += '<strong>'+item+'</strong> : 没有选择文件 </br></br>';
+                                $(".btn-playbook").addClass('disabled')
+                            }else {
+                                if(type == 'p'){
+                                    console.log('remove attr');
+                                    $(".btn-playbook").removeClass('disabled')
+
+                                }
+                                info_html += '<strong>'+i+'</strong>'+'  :  '+item+'</br></br>';
+                            }
+                        });
+                        info_html += '</div>';
+                        $("."+fId).html(info_html);
+                    }
+                })
+            })
+        }
+
+
+
+
+        // select 方法
+        function selectPicker(){
+            $(".filter_select").on('changed.bs.select',function(){
+
+                var
+                        htmlText ='<button type="button" class="btn btn-default btn-select" name="btn-select" value="data-uid">data-name</button>',
+                        data = {},
+                        ajax_url = "{% url 'ajax_server_select' %}"
+                        ;
+
+                $.each(["idc_select","project_select","label_select"],function(i,j){
+                    data[j] = $("#"+j).val();
+                });
+                $.ajax({
+                    url: ajax_url,
+                    type: 'POST',
+                    headers:{'Content-Type': "application/x-www-form-urlencoded"},
+                    data: {"data":JSON.stringify(data)},
+                    dataType: 'json',
+                    success: function(data){
+                        var html = "";
+                        $.each(data['data'],function(i,j){
+                            html += htmlText.replace('data-uid',j['uuid']).replace('data-name',j['name'])
+                        });
+                        $("#display_host").html(html);
+                        //console.log(ansible.itemList);
+                        ansileInit();
+                        ansible.addStyle();
+
+                    }
+                })
+            });
+        }
+        var ajax_data = {module: 'shell'};
+
+        //初始化 ajax 数据
+        $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+            var activeTab = e.target.getAttribute('aria-controls');
+            if(activeTab == 'command'){
+                ajax_data['module'] = 'shell';
+            } else if(activeTab == 'upload_files'){
+                ajax_data['module'] = 'copy';
+            } else if(activeTab == 'exec_scripts'){
+                ajax_data['module'] = 'script';
+            } else if(activeTab == 'playbook'){
+                ajax_data['module'] = 'playbook';}
+        });
 
         // 执行命令
-        $(document).ready(function(){
-            $('#button').click(function(){
-                var obj = document.getElementsByName("server_id");
-                var check_val = new Array;
-                for(k in obj){
-                    if(obj[k].checked)
-                        check_val.push(obj[k].value);
+        function ansibleRun(){
+            layui.use(['code','layer'], function(){ //加载code模块
+
+            });
+
+            $(".btn-ajax-submit").click(function(){
+                var
+                        err_msg = '',
+                        ajax_timeout = 10000,
+                        server_id = []
+                        ;
+                if (ansible.itemList.length > 0) {
+                    $.each(ansible.itemList, function (i, d) {
+                        new_d = JSON.parse(d);
+                        server_id.push(new_d['uid']);
+                    })
+                }else {
+                    err_msg = "请选择主机";
+                    $(".alert-dismissable").html('<div class="alert alert-danger" role="alert">'+err_msg+'</div>');
+                    return false;
                 }
-                var server_id = check_val.join(",");
 
-                var form = {
-                    'server_id':server_id,
-                    'ansible_cmd':$("#ansible_cmd").val(),
-                    'comm_shell':$("#id_brand").val()
-                };
-                //console.log(form);
+                ajax_data['server_id'] = server_id.join(',');
+                // post 表单
+                if(ajax_data['module'] == 'shell'){
+                    ajax_data['args'] = $("#ansible_cmd").val()
 
-                var ajx_url = "{% url 'ansible_cmd' %}";
+                }else if(ajax_data['module'] == 'copy'){
+                    ajax_data['file_id'] = $("#file_select").val();
+                    ajax_timeout = 50000;
+                    ajax_data['args'] = $("#file_path").val();
+                }else if(ajax_data['module'] == 'script'){
+                    ajax_data['args'] = $("#script_path").val();
+                    ajax_data['file_id'] = $("#script_select").val();
+                    ajax_data['script_args'] = $("#script_args").val();
+                }else if(ajax_data['module'] == 'playbook'){
+                    ajax_data['args'] = playbookArgs();
+                    ajax_data['file_id'] = $("#playbook_select").val();
+                }
+                console.log(ajax_data);
+                if (ajax_data['args'].length == 0){
+                    var err_msg = "请输入命令";
+                    $(".alert-dismissable").html('<div class="alert alert-danger" role="alert">'+err_msg+'</div>');
+                    return false;
+                }
+
+
+                var $btn = $(this);
+                var ajax_url = "{% url 'ajax_ansible_cmd' %}";
+                $btn.button('loading');
+                //layui.use('layer',function(){
+                //});
+
+                var ii = layer.load();
+
+                layer.msg('正在执行...请勿关闭窗口!', {
+                    icon: 1,
+                    shade: 0.01
+                });
 
                 jQuery.ajax({
-                    url: ajx_url,                  // 提交的页面
-                    data: form, // 从表单中获取数据
-                    type: 'POST',                       // 设置请求类型为"POST"，默认为"GET"
-                    dataType:'json',
+                    url: ajax_url,
+                    data: ajax_data,
+                    type: 'POST',
+                    dataType: 'json',
+                    timeout: ajax_timeout,
                     headers:{'Content-Type':"application/x-www-form-urlencoded"},
-                    beforeSend: function(){             // 设置表单提交前方法
-                        //alert('表单提交前');
-                        var msg_info = "";
-                        if(check_val.length == 0){
-                            msg_info += "请选择需要执行命令的主机<br>";
-                            $("#node_name").html('<div class="alert alert-danger" role="alert">'+msg_info+'</div>');
-                        }
-                        if($("#ansible_cmd").val().length == 0){
-                            msg_info += "命令不能为空";
-                        }
-                        if(msg_info.length > 0){
-                            $("#node_name").html('<div class="alert alert-danger" role="alert">'+msg_info+'</div>');
-                            return false;
-                        }
+                    error: function(msg){
+                        $(".alert-dismissable").remove();
+                        resault = '<div class="panel-heading"><span class="label label-warning">'  + ' 执行错误 </span></div><div class="panel-body">';
+                        resault += "连接超时,请稍后再试";
+                        //resault += msg;
+                        resault += "</br></div>";
+                        $("#ansible_res").html(resault);
+                        $btn.button('reset');
+                        layer.close(ii)
                     },
-                    error: function(request){           // 设置表单提交出错
-                        $("#node_name").html('<div class="alert alert-danger" role="alert">表单提交出错，请稍候再试</div>');
-                    },
-
                     success: function(msg){
-                        //var msg_info = "正在执行命令....";
-                        //$("#node_name").html('<div class="alert alert-success" role="alert">'+msg_info+'</div>');
-                        $("#node_name").remove();
+                        $btn.button('reset');
+                        $(".alert-dismissable").remove();
+                        console.log(msg);
 
-
-                        //console.log(msg);
                         var resault = "";
-                        $.each(msg,function(item,info){
-                            console.log(item,info);
-                            $.each(info,function(ip,detail){
+                        $.each(msg,function(item,data){
+{#                            console.log(item);#}
+                            console.log(data);
+                            if(item=='failed'){
+                                if(Object.keys(data).length > 0){
+                                    $.each(data,function(ip,detail){
+                                        //console.log(ip,detail);
+                                        resault += '<div class="panel-heading"><span class="label label-warning">' +ip + ' 失败 </span></div><div class="panel-body">';
+                                        resault += detail;
+                                        resault += "</br></div>";
+                                    });
+                                }
+                            }else if(item == 'success'){
+                                if(Object.keys(data).length > 0){
+                                    $.each(data,function(ip,detail){
+                                        resault += '<pre class="layui-code layui-box layui-code-view"><h3 class="layui-code-h3">IP:' + ip + ' 生效状态:' + detail['changed'] + '</h3>';
+                                        resault += '<ol class="layui-code-ol">';
+                                        $.each(detail,function(k,v){
+                                            if(k == 'stdout_lines'){
+                                                $.each(v,function(nil,res){
+                                                    resault += '<li>' + res + '</li>';
+                                                })
+                                            }else if(k == 'dest'){
+                                                resault += '<li>目标路径: ' + v + '</li>';
+                                                if(detail['change'] == true){
+                                                    resault += '<li>文件分发成功</li>'
+                                                }else {
+                                                    resault += '<li>相同文件已存在,未分发</li>'
+                                                }
+                                            }
+                                        });
+                                        resault += '</ol></pre>';
 
-                                resault += '<div class="panel-heading"><span class="label label-primary">' +ip + '</span></div><div class="panel-body">';
-                                $.each(detail['stdout_lines'],function(n,res){
-                                    resault += n+' >> ' + res + "</br></div>"
-                                });
-                            });
-                            //console.log(resault);
+                                        if($.inArray('stderr',detail) > 0){
+                                            if (detail['stderr'].length > 0) {
+                                                resault += '<br>错误输出: ' + detail['stderr'];
+                                            }
+                                            if (detail['stdout_lines'].length > 0) {
+                                                $.each(detail['stdout_lines'], function (i, d) {
+                                                    resault += '<li>' + d + '</li>';
+                                                });
+                                                resault += '</ol></pre>';
+                                            }
+                                        }else if($.inArray('path',detail) != -1){
+
+                                            $.each(detail,function(k,v){
+                                                resault += '<li>' + k + v + '</li>';
+                                            });
+                                            resault += '</ol></pre>';
+                                        }else {
+                                            console.log(detail)
+                                        }
+                                        //console.log($.inArray('path',detail));
+                                    });
+                                }
+                            }else{
+                                if(Object.keys(data).length > 0){
+                                    $.each(data,function(ip,detail){
+                                        //console.log(ip,detail);
+                                        resault += '<div class="panel-heading"><span class="label label-warning">' +ip + ' 超时 </span></div><div class="panel-body">';
+                                        resault += detail;
+                                        resault += "</br></div>";
+                                    });
+                                }
+                            }
+                            layer.close(ii);
+                            $btn.button('reset');
+
                             $("#ansible_res").html(resault);
-                        });
+                        })
                     }
                 });
+                layer.close(ii)
                 return false;
             });
-        });
+        }
 
-        //根据人员查询业务分类和主机
-
-        $(function(){
-            $(".btn-ajax").click(function(){
-                var url = $(this).attr("href");
-                console.log(url);
-                $.get(url,function(data){
-                    $("#node_name").html(data);
-                })
-
+        $(document).ready(function(){
+            swal({
+                title: '警告!!!',
+                text: "请谨慎操作,不清楚的不要随意执行,以免造成重大事故!所有操作已记录日志,请三思而行!",
+                type: "warning",
+                confirmButtonText: '确认',
+                //confirmButtonColor : '#DD6B55',
+                closeOnConfirm: true
             });
+            // 主机列表方法
+            ansileInit();
+            selectPicker();
+            ansibleRun();
+            fileSelect('file_select','f');
+            fileSelect('script_select','s');
+            fileSelect('playbook_select','p');
+            $(function () {
+                $('.palybook-input').bootstrapValidator({
+        　　　　　　　　message: 'This value is not valid',
+                    　feedbackIcons: {
+                        　　　　　　　　valid: 'glyphicon glyphicon-ok',
+                        　　　　　　　　invalid: 'glyphicon glyphicon-remove',
+                        　　　　　　　　validating: 'glyphicon glyphicon-refresh'
+                    　　　　　　　　   },
+                    fields: {
+                        key: {
+                            message: 'key验证失败',
+                            validators: {
+                                notEmpty: {
+                                    message: 'key不能为空'
+                                }
+                            }
+                        },
+                        value: {
+                            validators: {
+                                notEmpty: {
+                                    message: 'value不能为空'
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+
         });
-
-
-        $(".selectpicker").on('changed.bs.select',function(){
-
-            var
-                    project = $("#project").val(),
-                    label = $("#label").val(),
-                    idc = $("#idc_select").val()
-                    ;
-            console.log(project);
-
-            var ajax_url = "{% url 'ajax_server_list' %}" ;
-            $.ajax({
-                url: ajax_url,
-                type:'get',
-                dataType:'json',
-                success:function(data){
-                    var checkout_html = "";
-
-                    $.each(data,function(i,item){
-
-                        checkout_html += '<label><input type="checkbox" name="server_id" value="'+i+'">' + item[1] + '</label>';
-
-                    });
-                    $(".checkbox").html(checkout_html);
-                }
-            })
-        })
-
-
-
 
     </script>
 

@@ -15,12 +15,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path,include,re_path
-from .views import index,test_html
+from .views import index,test_html,error_auth,page_not_found
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     re_path(r'^$',index,name='index'),
+    re_path(r'^error_page.html',error_auth,name='error_auth'),
     re_path(r'^test$',test_html),
     re_path(r'^assets/',include('assets.urls')),
     re_path(r'^users/',include('accounts.urls')),
@@ -29,3 +30,4 @@ urlpatterns = [
     re_path(r'^ajax/',include('ajax.urls')),
     re_path(r'^auth/',include('authorize.urls')),
 ]
+handler404 = 'page_not_found'

@@ -111,3 +111,4 @@ cmdb.initServerDataTable = function (options) {
 
     return table;
 };
+

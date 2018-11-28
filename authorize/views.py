@@ -1,7 +1,10 @@
 from django.shortcuts import render,redirect
 from django.contrib.auth.decorators import login_required
-from authorize.models import auth_group,user_auth_cmdb
+from authorize.models import auth_group,user_auth_cmdb,AuthNode,AuthGroupNode
 from authorize.forms import AuthGroupForms,AuthGroupManagerForms
+from users.models import CustomUser,cmdb_uuid,department_Mode,auth_gid
+from django.db.models import Q
+from assets.models import Server
 
 # Create your views here.
 @login_required
@@ -87,6 +90,136 @@ def auth_group_authorize(request,id):
 
 
 
+def arule_index(request):
+    '''
+    资产授权 主页
+    :param request:
+    :return:
+    '''
+    header_title = [
+        "主机权限管理","编辑主机权限"
+    ]
+    title = header_title[-1]
+
+    return render(request,'auth/arule_index.html',locals())
+
+def arule_user_grant_list(request):
+    '''
+    用户资产授权 列表
+    :param request:
+    :return:
+    '''
+    header_title = [
+        "主机权限管理","用户授权"
+    ]
+    title = header_title[-1]
+
+    users = CustomUser.objects.filter(is_active=True).filter(is_staff=True).filter(is_superuser=False)
+
+    return render(request,'auth/arule_user_list.html',locals())
+
+def arule_user_grant(request,uid):
+    '''
+    编辑用户授权
+    :param request:
+    :return:
+    '''
+    header_title = [
+        "主机权限管理","用户授权"
+    ]
+    title = header_title[-1]
+    userObj = CustomUser.objects.get(uuid=uid)
+
+    try:
+        auth_node = AuthNode.objects.filter(user_name=uid)
+        host_select = Server.objects.filter(uuid__in=[n['node_id'] for n in auth_node.values()])
+        host_no_select = Server.objects.filter(~Q(uuid__in=[n['node_id'] for n in auth_node.values()]))
+
+    except:
+        host_no_select = Server.objects.filter(is_active=True)
+        host_select = []
+
+    if request.method == "POST":
+        serverSelect = request.POST.getlist('hostSelect')
+        serverNoSelect = request.POST.getlist('hostNoSelect')
+        for h in serverSelect:
+            try:
+                AuthNode.objects.get(user_name=userObj.uuid,node=h)
+            except:
+                AuthNode.objects.create(user_name=userObj,node=Server.objects.get(uuid=h))
+        for h in serverNoSelect:
+            try:
+                AuthNode.objects.get(user_name=userObj.uuid,node=h).delete()
+            except:
+                continue
+
+        return redirect('arule_user_grant_list')
+    return render(request,'auth/arule_user_edit.html',locals())
+
+def arule_depart_grant_list(request):
+    '''
+    部门授权列表
+    :param request:
+    :return:
+    '''
+    header_title = [
+        "主机权限管理","部门授权列表"
+    ]
+    title = header_title[-1]
+
+    departments = department_Mode.objects.all()
+    content = {}
+    for d in departments:
+        dep_user_list = []
+        dep_user_all = d.users.all().values("first_name")
+
+        for t in dep_user_all:
+            dep_user_list.append(t.get("first_name"))
+        for dg in auth_gid:
+            if d.desc_gid == dg[0]:
+                dep_group_name = dg[1]
+                break
+        else:
+            dep_group_name = "部门组错误"
+        # print(d.description)
+
+        content[d.department_name] = {"department_id":d.uuid,
+                                      'user_list':dep_user_list,
+                                      'department_admin':d.department_admin,
+                                      # 'department_admin_uuid':d.department_admin.uuid,
+                                      'department_group':dep_group_name,
+                                      'department_desc':d.description
+                                      }
+    return render(request,'auth/arule_depart_list.html',locals())
+
+def arule_depart_grant_edit(request,uid):
+    header_title = [
+        "主机权限管理","部门授权"
+    ]
+    title = header_title[-1]
+
+    depObj = department_Mode.objects.get(uuid=uid)
+
+    auth_node=AuthGroupNode.objects.filter(department_name = depObj.uuid)
+    host_select = Server.objects.filter(uuid__in=[n['node_id'] for n in auth_node.values()])
+    host_no_select = Server.objects.filter(~Q(uuid__in=[n['node_id'] for n in auth_node.values()]))
+
+    if request.method == "POST":
+        serverSelect = request.POST.getlist('hostSelect')
+        serverNoSelect = request.POST.getlist('hostNoSelect')
+        for h in serverSelect:
+            try:
+                AuthGroupNode.objects.get(department_name=depObj.uuid,node=h)
+            except:
+                AuthGroupNode.objects.create(department_name=depObj,node=Server.objects.get(uuid=h))
+        for h in serverNoSelect:
+            try:
+                AuthGroupNode.objects.get(department_name=depObj.uuid,node=h).delete()
+            except:
+                continue
+
+        return redirect('arule_depart_grant_list')
 
 
 
+    return render(request,'auth/arule_depart_edit.html',locals())

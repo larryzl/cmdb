@@ -1,0 +1,9 @@
+---
+
+- hosts: all
+  tasks:
+    - name: step1
+      shell: echo "ok"
+
+    - name: step2
+      shell: echo "{{ version }}"

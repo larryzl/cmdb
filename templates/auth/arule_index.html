@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+<!--
+ 主机授权首页
+ -->
+
+{% block content %}
+<div class="jumbotron">
+  <div class="container">
+      <h1>主机授权管理</h1>
+      <p>请选择授权对象</p>
+
+      <p>
+          <a class="btn btn-primary btn-lg" href="{% url 'arule_user_grant_list' %}" role="button">用户授权</a>
+          <a class="btn btn-primary btn-lg" href="{% url 'arule_depart_grant_list' %}" role="button">部门授权</a>
+      </p>
+
+  </div>
+</div>
+
+
+{% endblock %}

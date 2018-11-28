@@ -9,8 +9,11 @@ urlpatterns = [
 
     re_path(r'^user/edit/(?P<uid>[\w|\-]+)/$',user_edit.user_edit,name='user_edit'),
 
-    re_path('^user/del/(?P<sid>\d+)/', views.user_del,name='user_del'),
+    re_path('^user/del/$', views.user_del,name='user_del'),
+    re_path('^user/active/$',views.user_active,name='user_active'),
+
     re_path('^register/$',views.register,name='reggister'),
+
     re_path('^login/$',views.user_login,name='login'),
     re_path('^logout/$',views.Logout,name='logout'),
 

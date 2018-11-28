@@ -30,12 +30,12 @@
                                     <td class="text-center" id="ip"> {{ i.explanation }} </td>
                                     <td class="text-center" id="ip"> {% for k,v in group_user_count.items %} {% if k == i.uuid %}{{ v }}{% endif %}{% endfor %} </td>
                                     {% if i.enable %}
-                                        <td class="text-center"><a href="/auth/cmdb/status/{{ i.uuid }}/" class="voilet_restart"><span class="glyphicon glyphicon-ok" aria-hidden="true" style="color:#2ad49e"></span></a> </td>
+                                        <td class="text-center"><a href="#" class="voilet_restart"><span class="glyphicon glyphicon-ok" aria-hidden="true" style="color:#2ad49e"></span></a> </td>
                                     {% else %}
-                                        <td class="text-center"><a href="/auth/cmdb/status/{{ i.uuid }}/" class="voilet_restart"><span class="glyphicon glyphicon-remove" aria-hidden="true" style="color:#ff6846"></span> </a></td>
+                                        <td class="text-center"><a href="#" class="voilet_restart"><span class="glyphicon glyphicon-remove" aria-hidden="true" style="color:#ff6846"></span> </a></td>
                                     {% endif %}
-                                    <td class="text-center" id="start_time"> <a href="{% url 'auth-group_authorize' i.uuid %}" class="select_node"  >权限管理</a> |
-                                        <a href="{% url 'auth-group_edit' i.uuid %}" class="select_node"><li class="glyphicon glyphicon-pencil" style="color:#2ad49e"></li>修改</a> |
+                                    <td class="text-center" id="start_time"> <a href="{% url 'hrule_authorize' i.uuid %}" class="select_node"  >权限管理</a> |
+                                        <a href="{% url 'hrule_edit' i.uuid %}" class="select_node"><li class="glyphicon glyphicon-pencil" style="color:#2ad49e"></li>修改</a> |
                                         <a><li class="glyphicon glyphicon-trash" style="color:#ff6846"></li>删除</a>
                                     </td>
                                 </tr>
@@ -44,7 +44,7 @@
                         </table>
                  <div class="row">
                     <div class="col-sm-6">
-                        <input type="button" class="btn btn-sm btn-primary" onclick="window.location.href='{% url 'auth-group_add' %}'" value="添加权限组">
+                        <input type="button" class="btn btn-sm btn-primary" onclick="window.location.href='{% url 'hrule_add' %}'" value="添加权限组">
                     </div>
                 </div>
                     </div>

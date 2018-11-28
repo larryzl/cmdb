@@ -1,11 +1,11 @@
-{#{% include 'link_css.html' %}#}
-{#{% include 'script.html' %}#}
 {% extends 'base.html' %}
 {% block content %}
+    {% load staticfiles %}
 {% load bootstrap %}
 <style>
 .voilet_backgroup{background: #FFFFFF}
 </style>
+
 <div class="voilet_backgroup">
 <div class="wrapper wrapper-content animated fadeInRight">
     <div class="row">
@@ -18,20 +18,81 @@
                         <div class="col-sm-8" hidden="hidden"><input  type="text" name="group_name" value="{{ authGroupObj.uuid }}" class="form-control" readonly="readonly"></div>
                     </div>
                     <div class="hr-line-dashed"></div>
-
-                    <div class="form-group"><label class="col-sm-2 control-label"> 资产管理 </label>
-                        <div class="col-sm-3">
-                            {{ data.select_host| bootstrap_horizontal }}
-                            {{ data.add_host| bootstrap_horizontal }}
-                            {{ data.bat_add_host| bootstrap_horizontal }}
-                            {{ data.edit_host| bootstrap_horizontal }}
-                            {{ data.update_host| bootstrap_horizontal }}
-                            {{ data.delete_host| bootstrap_horizontal }}
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label"> 资产管理 </label>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-8 col-md-offset-2">
+                            <label class="checkbox-inline col-sm-2">{{ data.select_host| bootstrap_horizontal}}</label>
+                            <label class="checkbox-inline col-sm-2">{{ data.add_host| bootstrap_horizontal }}</label>
+                            <label class="checkbox-inline col-sm-2">{{ data.bat_add_host| bootstrap_horizontal }}</label>
+                            <label class="checkbox-inline col-sm-2">{{ data.edit_host| bootstrap_horizontal }}</label>
+                        </div>
+                        <div class="col-lg-8 col-md-offset-2">
+                            <label class="checkbox-inline col-sm-2">{{ data.update_host| bootstrap_horizontal }}</label>
+                            <label class="checkbox-inline col-sm-2">{{ data.delete_host| bootstrap_horizontal }}</label>
+                            <label class="checkbox-inline col-sm-2">{{ data.idc_list | bootstrap_horizontal }}</label>
+                            <label class="checkbox-inline col-sm-2">{{ data.idc_add | bootstrap_horizontal }}</label>
+                        </div>
+                        <div class="col-lg-8 col-md-offset-2">
+                            <label class="checkbox-inline col-sm-2">{{ data.idc_del | bootstrap_horizontal }}</label>
+                            <label class="checkbox-inline col-sm-2">{{ data.idc_edit| bootstrap_horizontal }}</label>
+                            <label class="checkbox-inline col-sm-2">{{ data.project_list| bootstrap_horizontal }}</label>
+                            <label class="checkbox-inline col-sm-2">{{ data.project_add | bootstrap_horizontal }}</label>
+                        </div>
+                        <div class="col-lg-8 col-md-offset-2">
+                            <label class="checkbox-inline col-sm-2">{{ data.project_edit | bootstrap_horizontal }}</label>
+                            <label class="checkbox-inline col-sm-2">{{ data.project_del | bootstrap_horizontal }}</label>
+                            <label class="checkbox-inline col-sm-2">{{ data.label_list | bootstrap_horizontal }}</label>
+                            <label class="checkbox-inline col-sm-2">{{ data.label_add | bootstrap_horizontal }}</label>
+                        </div>
+                        <div class="col-lg-8 col-md-offset-2">
+                            <label class="checkbox-inline col-sm-2">{{ data.label_edit | bootstrap_horizontal }}</label>
+                            <label class="checkbox-inline col-sm-2">{{ data.label_del | bootstrap_horizontal }}</label>
                         </div>
                     </div>
 
                     <div class="hr-line-dashed"></div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label"> 用户管理 </label>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-8 col-md-offset-2">
+                            <label class="checkbox-inline col-sm-2">{{ data.user_list| bootstrap_horizontal }}</label>
+                            <label class="checkbox-inline col-sm-2">{{ data.user_edit| bootstrap_horizontal }}</label>
+                            <label class="checkbox-inline col-sm-2">{{ data.user_del| bootstrap_horizontal }}</label>
+                            <label class="checkbox-inline col-sm-2">{{ data.user_active| bootstrap_horizontal }}</label>
+                        </div>
+                        <div class="col-lg-8 col-md-offset-2">
+                            <label class="checkbox-inline col-sm-2">{{ data.department_list| bootstrap_horizontal }}</label>
+                            <label class="checkbox-inline col-sm-2">{{ data.department_add| bootstrap_horizontal }}</label>
+                            <label class="checkbox-inline col-sm-2">{{ data.department_edit| bootstrap_horizontal }}</label>
+                            <label class="checkbox-inline col-sm-2">{{ data.department_del| bootstrap_horizontal }}</label>
+                        </div>
+                    </div>
 
+                    <div class="hr-line-dashed"></div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label"> ansible管理  </label>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-8 col-md-offset-2">
+                            <label class="checkbox-inline col-sm-2">{{ data.exec_cmd| bootstrap_horizontal }}</label>
+                            <label class="checkbox-inline col-sm-2">{{ data.update_file| bootstrap_horizontal }}</label>
+                        </div>
+                    </div>
+                   <div class="hr-line-dashed"></div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label"> 文件管理  </label>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-8 col-md-offset-2">
+                            <label class="checkbox-inline col-sm-2">{{ data.file_list| bootstrap_horizontal }}</label>
+                            <label class="checkbox-inline col-sm-2">{{ data.upload_file| bootstrap_horizontal }}</label>
+                        </div>
+                    </div>
+
+                    <div class="hr-line-dashed"></div>
 
                     <div class="form-group">
                        <div class="col-sm-4 col-sm-offset-5">

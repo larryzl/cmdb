@@ -18,9 +18,9 @@
                         <div class="form-group">
                             <label for="HostIP" class="control-label col-sm-2 col-lg-2 "> 主机</label>
                             <div class="col-sm-3">
-                                <select name="host_no_select" id="host_no_select" class="form-control m-b" size="12" multiple>
+                                <select name="hostNoSelect" id="hostNoSelect" class="form-control m-b" size="12" multiple>
                                     {% for host in host_no_select %}
-                                        <option value="{{ host.pk }}">{{ host.name }} - {{ host.ip }}</option>
+                                        <option value="{{ host.uuid }}">{{ host.name }} - {{ host.ip }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -30,23 +30,27 @@
                                     <button id="move_left" type="button" class="btn btn-white"><i class="fa fa-chevron-left"></i></button>
                                 </div>
                             </div>
-
                             <div class="col-sm-3">
-                                <select name="host_select" id="host_select" class="form-control m-b" size="12" multiple>
+                                <select name="hostSelect" id="hostSelect" class="form-control m-b" size="12" multiple>
                                     {% for host in host_select %}
-                                        <option value="{{ host.pk }}">{{ host.name }} - {{ host.ip }}</option>
+                                        <option value="{{ host.uuid }}">{{ host.name }} - {{ host.ip }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
+                            <div class="col-sm-10 col-sm-offset-2">
+                                <p>tips: 只显示有权限的主机信息</p>
+                            </div>
+
                         </div>
+
 
                         <div class="hr-line-dashed"></div>
                         <div class="form-group">
                             <div class="col-sm-8 col-sm-offset-1">
-                                <button type="reset" class="btn btn-default">恢复</button>
+                                <button type="button" class="btn btn-default btn-test">恢复</button>
                             </div>
                             <div class="col-sm-1">
-                                <button type="submit" class="btn btn-primary" onclick="on_submit()">修改</button>
+                                <button type="submit" class="btn btn-primary btn-submit">修改</button>
                             </div>
                         </div>
                     </form>
@@ -60,27 +64,36 @@
 
 
     <script type="application/javascript">
-        function move_right(){
-            //console.log("right");
-            var lSelect = $("#host_no_select option:selected");
-            lSelect.clone().appendTo("#host_select");
-            lSelect.remove();
-        }
+        $(function(){
+           $("#move_right").click(function(){
+               var lSelect = $("#hostNoSelect option:selected");
+               lSelect.clone().appendTo("#hostSelect");
+               lSelect.remove();
+           })
+        });
         $(function(){
            $("#move_left").click(function(){
                //console.log("left");
-               var lSelect = $("#host_select option:selected");
-               lSelect.clone().appendTo("#host_no_select");
+               var lSelect = $("#hostSelect option:selected");
+               lSelect.clone().appendTo("#hostNoSelect");
                lSelect.remove();
            }) ;
         });
 
-        function on_submit(){
-            $("#host_select option").each(
-                    function(){
-                        $(this).prop('selected',true);
-                    }
-            )
+        function nodeSelect(){
+            $(".btn-submit").click(function(){
+                $("#hostNoSelect option").each(function(){
+                    $(this).prop('selected',true);
+                });
+                $("#hostSelect option").each(function(){
+                    $(this).prop('selected',true);
+                })
+            })
         }
+
+
+        $(document).ready(function(){
+            nodeSelect();
+        })
     </script>
 {% endblock %}

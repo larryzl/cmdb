@@ -21,13 +21,12 @@
                         <table class="table table-striped table-bordered table-hover ">
                             <thread>
                                 <tr>
-                                    <th>用户名</th>
                                     <th>姓名</th>
                                     <th>部门</th>
                                     <th>角色</th>
                                     <th>邮箱</th>
                                     <th>主机数量</th>
-                                    <th>激活</th>
+                                    <th>状态</th>
                                     <th>注册时间</th>
                                     <th>上次登录时间</th>
                                     <th>操作</th>
@@ -40,8 +39,6 @@
                             {% for user in users %}
 
                                 <tr id={{ user.pk }}>
-
-                                    <td>{{ user.username }}</td>
                                     <td>{{ user.first_name }}</td>
                                     {% if user.department %}
                                         <td>{{ user.department.department_name }}</td>
@@ -77,22 +74,15 @@
                                         {% endif %}
                                     </td>
 
-                                <td>
-                                        {% if request.user.is_superuser or request.session.fun_auth.edit_user %}
-
-                                            <a href="{% url 'user_edit' user.uuid %}" class="btn btn-xs btn-info">修改</a>
-                                            {% if not i.is_staff and i.is_active %}
-                                                <a href="/accounts/status/{{ i.id }}/" class="btn btn-success btn-xs status"></i>恢复</a>
-                                            {% else %}
-                                                 <a href="/accounts/status/{{ i.id }}/" class="btn btn-xs btn-warning status"></i>禁用</a>
-                                                {% endif %}
-                                            <a href="{% url 'user_del' user.pk %}" class="btn btn-xs btn-danger status">删除</a>
-
-                                            {% else %}
-                                            没有权限
+                                    <td class="btn-group">
+                                        <a href="{% url 'user_edit' user.uuid %}" class="btn btn-xs btn-info">修改</a>
+                                        {% if user.is_staff and not user.is_active %}
+                                            <button type="button" class="btn btn-success btn-xs user-active" value="{{ user.uuid }}">恢复</button>
+                                        {% else %}
+                                            <button type="button" class="btn btn-xs btn-warning user-active" value="{{ user.uuid }}">禁用</button>
                                         {% endif %}
-                                        </td>
-
+                                        <button type="button" class="btn btn-xs btn-danger user-del" value="{{ user.uuid }}">删除</button>
+                                    </td>
 
                                 </tr>
                             {% endfor %}
@@ -110,69 +100,37 @@
 
 
     <script type="application/javascript">
-        //获取选中值
-        function getCheckbox(){
+    // 删除用户
+    function delAccount(){
+        $(".user-del").click(function(){
+            var $this = $(this);
             var
-                    $GroupList = $('input[name="item_checkbox"]:checked'),
-                    check_id_list = [],
-                    check_name_list = []
+                    uid = $this.val(),
+                    ajax_url = "{% url 'user_del' %}?id="+uid,
+                    name = "用户名: "+$(this).closest("tr").children().first().html()
                     ;
-
-            $GroupList.each(function(){
-                check_id_list.push($(this).val());
-                var delName = $(this).parents('tr').children().eq(2).text().replace(/ /g,'').replace(/\n/g,'');
-                console.log(delName);
-                check_name_list.push(delName);
-
-            });
-            return ([check_id_list,check_name_list]);
-        }
-        //删除用户
-
-
-        //加载用户组
-        $('.selectpicker').on('changed.bs.select',function(){
+            objectDelete($this,name,ajax_url);
+        })
+    }
+    // 修改用户状态
+    function activeAccount(){
+        $(".user-active").click(function(){
+            var $this = $(this);
             var
-                    group_list = [],
-                    groups = $("#group_select").val()
+                    uid = $this.val(),
+                    ajax_url = "{% url 'user_active' %}?id="+uid,
+                    name = "用户名: "+$(this).closest("tr").children().first().html()
             ;
-            for(var g in groups){
-                group_list.push(g);
-            }
-            if(group_list.length > 0) {
-                getGroupData(groups.join(','));
-            }else{
-                $(".list tr").each(function(){
-                    $(this).show();
-                });
-            }
-        });
-        //
-        function getGroupData(group){
+            objectActiveChange($this,name,ajax_url,'','reload');
+        })
+    }
 
-            $.ajax({
-                url: "{% url 'user_list' %}",
-                type: "GET",
-                data: {
-                    "groups":group
-                },
-                success : function(data) {
-                    //var col = $(".list").find("tr").prevAll().length;
-                    var trs = $(".list tr");
-                    trs.each(function(){
-                        $(this).show();
-                    });
-
-                    var dataObj = data;
-                    $.each(dataObj,function(index,item){
-                        $("#"+item.pk).hide();
-                    });
-
-                }
-            })
-        }
+    $(document).ready(function(){
+        delAccount();
+        activeAccount()
 
 
+    });
 
     </script>
 

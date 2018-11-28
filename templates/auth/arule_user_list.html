@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h4>部门列表</h4>
+                </div>
+                <div class="ibox-content">
+                    <form id="host_form">
+
+                        <!-- Single button -->
+
+
+                        <table class="table table-striped table-bordered table-hover ">
+                            <thread>
+                                <tr>
+                                    <th>姓名</th>
+                                    <th>部门</th>
+                                    <th>角色</th>
+                                    <th>邮箱</th>
+                                    <th>主机数量</th>
+                                    <th>操作</th>
+
+
+                                </tr>
+                            </thread>
+                            <tbody class="list">
+
+                            {% for user in users %}
+
+                                <tr id={{ user.pk }}>
+                                    <td>{{ user.first_name }}</td>
+                                    {% if user.department %}
+                                        <td>{{ user.department.department_name }}</td>
+                                    {% else %}
+                                        <th>没有分组</th>
+                                    {% endif %}
+
+                                    <td>
+                                        {% if user.is_superuser %}
+                                            超级管理员
+                                        {% else %}
+                                            普通用户
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ user.email }}</td>
+                                    <td>
+                                        {{ user.authnode_user }}
+                                    </td>
+                                    <td class="center">
+                                        <a href="{% url 'arule_user_grant_edit' user.uuid %}" class="btn btn-xs btn-info">授权</a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock %}

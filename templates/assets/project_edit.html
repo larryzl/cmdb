@@ -17,9 +17,9 @@
                         <div class="form-group">
                             <label for="HostIP" class="control-label col-sm-2 col-lg-2 "> 主机</label>
                             <div class="col-sm-3">
-                                <select name="host_no_select" id="host_no_select" class="form-control m-b" size="12" multiple>
+                                <select name="hostNoSelect" id="hostNoSelect" class="form-control m-b" size="12" multiple>
                                     {% for host in host_no_select %}
-                                        <option value="{{ host.pk }}">{{ host.name }} - {{ host.ip }}</option>
+                                        <option value="{{ host.uuid }}">{{ host.name }} - {{ host.ip }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -30,9 +30,9 @@
                                 </div>
                             </div>
                             <div class="col-sm-3">
-                                <select name="host_select" id="host_select" class="form-control m-b" size="12" multiple>
+                                <select name="hostSelect" id="hostSelect" class="form-control m-b" size="12" multiple>
                                     {% for host in host_select %}
-                                        <option value="{{ host.pk }}">{{ host.name }} - {{ host.ip }}</option>
+                                        <option value="{{ host.uuid }}">{{ host.name }} - {{ host.ip }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -57,22 +57,27 @@
 
     <script type="application/javascript">
     function move_right(){
-        var lSelect = $("#host_no_select option:selected");
-        lSelect.clone().appendTo("#host_select");
+        var lSelect = $("#hostNoSelect option:selected");
+        lSelect.clone().appendTo("#hostSelect");
         lSelect.remove();
     }
     $(function(){
         $("#move_left").click(function(){
-            var lSelect = $("#host_select option:selected");
-            lSelect.clone().appendTo("#host_no_select");
+            var lSelect = $("#hostSelect option:selected");
+            lSelect.clone().appendTo("#hostNoSelect");
             lSelect.remove();
         });
     });
     function on_submit(){
-        $("#host_select option").each(
-                function(){
-                    $(this).prop('selected',true);
-                }
+        $("#hostSelect option").each(
+            function(){
+                $(this).prop('selected',true);
+            }
+        );
+        $("#hostNoSelect option").each(
+            function(){
+                $(this).prop('selected',true);
+            }
         )
     }
     </script>

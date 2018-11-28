@@ -22,8 +22,8 @@
         <form class="m-t" role="form" method="post" action="">
             {% csrf_token %}
             <div class="form-group">
-{#                <input type="text" name="username" class="form-control" placeholder="Email" required="length[6~50]">#}
-                {{ form.email | bootstrap_horizontal}}
+                <input type="text" name="email" class="form-control" placeholder="Email" required="length[6~50]">
+{#                {{ form.email | bootstrap_horizontal}}#}
             </div>
             <div class="form-group">
                 <input type="password" name="password" class="form-control" placeholder="Password" required="">

@@ -1,0 +1,10 @@
+---
+
+- hosts: "{{ hosts }}"
+  
+  vars:
+    version: "3.2.1"
+
+  tasks:
+    - name: "step 1"
+      shell: echo "{{version}}"

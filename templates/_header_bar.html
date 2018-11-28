@@ -1,49 +1,61 @@
-{% load i18n %}
-<div class="row border-bottom">
-    <nav class="navbar navbar-static-top white-bg" role="navigation" style="margin-bottom: 0">
-        <div class="navbar-header">
-            <a class="navbar-minimalize minimalize-styl-2 btn btn-primary " href="#"><i class="fa fa-bars"></i> </a>
-            <!--<form role="search" class="navbar-form-custom" method="get" action="">-->
-            <!--<div class="form-group">-->
-            <!--<input type="text" placeholder="{% trans 'Search' %}..." class="form-control" name="search" id="top-search">-->
-            <!--</div>-->
-            <!--</form>-->
-        </div>
-        <ul class="nav navbar-top-links navbar-right">
-            <li>
-                <span class="m-r-sm text-muted welcome-message">CMDB 主机管理系统</span>
-            </li>
+<div class="row border-bottom" style="max-height: 55px;">
+    <nav class="navbar navbar-default white-bg">
+        <div class="container-fluid">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+                <a class="navbar-brand">CMDB</a>
+            </div>
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 
-
-            <li class="dropdown">
-                {% if request.user.is_authenticated %}
-                    <a data-toggle="dropdown" class="dropdown-toggle" href="#">
+                <form class="navbar-form navbar-left">{% csrf_token %}
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="主机搜索,输入IP地址...">
+                    </div>
+                    <button type="submit" class="btn btn-default">搜索</button>
+                </form>
+                <ul class="nav navbar-nav navbar-right">
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">CMDB管理平台 <span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#">Zabbix 监控平台</a></li>
+                            <li><a href="#">Kibana 日志平台</a></li>
+                            <li><a href="#">Percona MySQL监控平台</a></li>
+                            {#            <li role="separator" class="divider"></li>#}
+                            {#            <li><a href="#">Separated link</a></li>#}
+                        </ul>
+                    </li>
+                    <li class="dropdown">
+                        {% if request.user.is_authenticated %}
+                            <a data-toggle="dropdown" class="dropdown-toggle" href="#">
                     <span class="m-r-sm text-muted welcome-message">
                           <span style="font-size: 13px;font-weight: 400">
 
-                            <img alt="image" class="img-circle" width="30" height="30" src="/static/img/photo.png"/>
+                            <img alt="image" class="img-circle" width="19" height="19" src="/static/img/photo.png"/>
                               {{ request.user.email }}<b class="caret"></b>
                           </span>
                     </span>
-                    </a>
+                            </a>
+                            <ul class="dropdown-menu animated fadeInRight m-t-xs profile-dropdown">
+                                <li><a href="#"><i class="fa fa-cogs"> </i><span> 'Profile' </span></a></li>
+                                {% if request.user.is_superuser %}
+                                    {% if request.COOKIES.IN_ADMIN_PAGE == 'No' %}
+                                        <li><a id="switch_admin"><i class="fa fa-exchange"></i><span> Admin page</span></a></li>
+                                    {% else %}
+                                        <li><a id="switch_user"><i class="fa fa-exchange"></i><span> User page</span></a></li>
+                                    {% endif %}
+                                {% endif %}
+                                <li><a href="{% url 'logout' %}"><i class="fa fa-sign-out"></i> Logout</a></li>
+                            </ul>
+                        {% else %}
+                            <a href="{% url 'login' %}">
 
-                    <ul class="dropdown-menu animated fadeInRight m-t-xs profile-dropdown">
-                        <li><a href="#"><i class="fa fa-cogs"> </i><span> {% trans 'Profile' %}</span></a></li>
-                        {% if request.user.is_superuser %}
-                            {% if request.COOKIES.IN_ADMIN_PAGE == 'No' %}
-                                <li><a id="switch_admin"><i class="fa fa-exchange"></i><span> {% trans 'Admin page' %}</span></a></li>
-                            {% else %}
-                                <li><a id="switch_user"><i class="fa fa-exchange"></i><span> {% trans 'User page' %}</span></a></li>
-                            {% endif %}
+                                <i class="fa fa-sign-in"></i>Login
+                            </a>
                         {% endif %}
-                        <li><a href="{% url 'logout' %}"><i class="fa fa-sign-out"></i> {% trans 'Logout' %}</a></li>
-                    </ul>
-                {% else %}
-                    <a href="{% url 'login' %}">
-                        <i class="fa fa-sign-in"></i>{% trans 'Login' %}
-                    </a>
-                {% endif %}
-            </li>
-        </ul>
+                    </li>
+                </ul>
+            </div><!-- /.navbar-collapse -->
+        </div><!-- /.container-fluid -->
     </nav>
 </div>

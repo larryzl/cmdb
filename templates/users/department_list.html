@@ -45,12 +45,8 @@
                                     <td>{{ v.department_desc}}</td>
 
                                     <td>
-                                        {% if request.user.is_superuser or request.session.fun_auth.edit_user %}
-                                            <a href="{% url 'department_edit' v.department_id %}" class="btn btn-xs btn-info">编辑</a>
-                                            <a onclick="delDepartment({{ v.department_id }})" class="btn btn-xs btn-danger asset_del">删除</a>
-                                        {% else %}
-                                            没有权限
-                                        {% endif %}
+                                        <a href="{% url 'department_edit' v.department_id %}" class="btn btn-xs btn-info">编辑</a>
+                                        <button type="button" value="({{ v.department_id }})" class="btn btn-xs btn-danger asset_del">删除</button>
                                     </td>
                                 </tr>
                             {% endfor %}
@@ -63,16 +59,17 @@
         </div>
     </div>
     <script>
+function delAsset(){
+    $(".asset_del").click(function(){
+        var $this = $(this);
+        var
+                name = '',
+                ajax_url = ''
+                ;
 
-        function delDepartment(pk){
-            console.log(pk);
-            $("#"+pk).hide();
-            var url = "{% url 'department_del' 'pk' %}".replace('pk',pk);
 
-            $.get(
-                    url
-            )
-        }
+    })
+}
 
     </script>
 

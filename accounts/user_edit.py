@@ -2,6 +2,8 @@ from django.shortcuts import render,redirect
 from users.models import department_Mode,CustomUser
 from django import forms
 import time
+from accounts.auth_api import has_auth
+from django.contrib.auth.decorators import login_required
 
 
 class department_from(forms.ModelForm):
@@ -20,6 +22,9 @@ class user_edit_form(forms.ModelForm):
         model = CustomUser
         fields = ["username","first_name","email","mobile","department","user_key"]
 
+
+@has_auth('user_edit')
+@login_required()
 def user_edit(request,uid):
     header_title = [
         "用户管理","修改用户"

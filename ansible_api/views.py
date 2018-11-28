@@ -7,77 +7,91 @@ from django.http import HttpResponse,JsonResponse
 import json
 import tempfile
 import os
+from django.db.models import Q
 import stat
 from users.models import CustomUser
+from files.models import Files,AnsibleScript,AnsiblePlaybook
+from accounts.auth_api import has_auth,get_node_list
 
 # Create your views here.
 
-def index(request):
+
+@has_auth('exec_cmd')
+@login_required
+@csrf_exempt
+def exec_cmd(request):
     header_title = [
         "任务管理","主机操作"
     ]
     title = header_title[-1]
 
-    data = Server.objects.filter(is_active=True)
-
-    return render(request,'ansible/index.html',locals())
-
-@login_required
-@csrf_exempt
-def exec_cmd(request):
-    header_title = [
-        "任务管理","批量命令"
-    ]
-    title = header_title[-1]
-
-    server_all = Server.objects.filter(is_active=True)
     idcs = IDC.objects.filter()
     projects = Project.objects.filter()
     labels = Label.objects.filter()
 
-    user_key = CustomUser.objects.get(email=request.user).user_key
+    email = request.session.get('email')
+    userObj = CustomUser.objects.get(email=email)
 
+    if userObj.is_superuser:
+        files = Files.objects.all()
+        user_scripts = AnsibleScript.objects.all()
+        user_playbook = AnsiblePlaybook.objects.all()
+    else:
+        files = Files.objects.filter(Q(user__email=email)|Q(is_shared=True))
+        user_scripts = AnsibleScript.objects.filter(Q(user__email=email)|Q(is_shared=True))
+        user_playbook = AnsiblePlaybook.objects.filter(Q(user__email=email)|Q(is_shared=True))
 
-    if request.is_ajax():
-        module = request.POST.get('comm_shell')
-        cmd = request.POST.get('ansible_cmd')
-        server_id = request.POST.get('server_id')
+    file_data = []
+    scripts_data = []
+    playbook_data = []
+    for i in user_scripts:
+        scripts_data.append(
+                {
+                    'file_name':str(i.file_name).split('/')[-1],
+                    'create_time':i.date_joined,
+                    'file_size':i.file_size,
+                    'description':i.description,
+                    'file_id':i.uuid,
+                    'md5':i.md5
+                }
+        )
 
-        host_list = []
-        host_dict = []
-
-        ssh_keyfile = tempfile.mktemp()
-        # print(ssh_keyfile)
-        with open(ssh_keyfile, 'w+', encoding='utf-8') as file:
-            file.write(user_key)
-        os.chmod(ssh_keyfile,stat.S_IRUSR|stat.S_IWUSR)
-        for id in server_id.split(','):
-            server_obj = server_all.get(id=id)
-            host_dict.append(
-                    {
-                        'host': server_obj.ip,
-                        'port': server_obj.ssh_port,
-                        'method':'ssh',
-                        'user': server_obj.ssh_user,
-                        'ssh_key':ssh_keyfile
-                    }
-            )
-        # print(host_dict)
-
-        for i in host_dict:
-            host_list.append(AnsibleHost(host=i['host'],port=i['port'],connection=i['method'],ssh_user=i['user'],ssh_key=i['ssh_key']))
-
-        task = AnsibleRunner(host_list)
-
-        task.run(module,cmd)
-        result = task.get_result()
-        # result = ansible_run.get_result()
-        # print(result)
-        os.remove(ssh_keyfile)
-        # print(result)
-        return HttpResponse(json.dumps(result))
-
-
+    for i in files:
+        file_data.append(
+                {
+                    'file_name':str(i.file_name).split('/')[-1],
+                    'create_time':i.date_joined,
+                    'file_size':i.file_size,
+                    'description':i.description,
+                    'file_id':i.uuid,
+                    'md5':i.md5
+                }
+        )
+    for i in user_playbook:
+        playbook_data.append(
+                {
+                    'file_name':str(i.file_name).split('/')[-1],
+                    'create_time':i.date_joined,
+                    'file_size':i.file_size,
+                    'description':i.description,
+                    'file_id':i.uuid,
+                    'md5':i.md5
+                }
+        )
     return render(request,'ansible/ansible_cmd.html',locals())
 
+def playbookView(request):
+    import os
+    uid = request.GET.get('uid')
+    file_path = str(AnsiblePlaybook.objects.get(uuid = uid).file_name)
+    file_name = file_path.split('/')[-1]
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    with open(os.path.join(BASE_DIR,file_path)) as f:
+        file_data = f.readlines()
 
+
+    return render(request,'ansible/playbook_view.html',locals())
+
+
+def ansible_log(request):
+    pass

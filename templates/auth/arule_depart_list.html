@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h4>部门列表</h4>
+                </div>
+                <div class="ibox-content">
+                    <form id="host_form">
+
+                        <!-- Single button -->
+
+
+                        <table class="table table-striped table-bordered table-hover ">
+                            <thread>
+                                <tr>
+                                    <th>部门名称</th>
+                                    <th>管理员</th>
+                                    <th>成员</th>
+                                    <th>部门组</th>
+                                    <th>说明</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thread>
+                            <tbody class="list">
+
+                           {% for k,v in content.items %}
+                                <tr>
+                                    <td>{{ k }}</td>
+                                    {% if v.department_admin %}
+                                        <td>{{ v.department_admin }}</td>
+                                    {% else %}
+                                        <td>暂无管理员</td>
+                                    {% endif %}
+                                    <td>
+                                        {% for u in v.user_list %}
+                                            {{ u }}
+                                        {% endfor %}
+                                    </td>
+                                    <td>{{ v.department_group }}</td>
+                                    <td>{{ v.department_desc}}</td>
+
+                                    <td>
+                                        <a href="{% url 'arule_depart_grant_edit' v.department_id %}" class="btn btn-xs btn-info">授权</a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock %}

@@ -5,11 +5,13 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib.auth.decorators import login_required
 from assets.forms import ServerEditFrom,ServerFrom,IdcForm,ProjectFrom,LabelForm
 from assets.models import Server,IDC,Project,Label,server_os
+from accounts.auth_api import has_auth,get_node_list
 # Create your views here.
 
 def index(request):
     return HttpResponse("ok")
 
+@has_auth('select_host')
 @login_required()
 def server_list(request):
 
@@ -20,6 +22,7 @@ def server_list(request):
 
     return render(request,'assets/server_list.html',context=locals())
 
+@has_auth('edit_host')
 @login_required()
 def server_edit(request,id):
     header_title = [
@@ -35,6 +38,7 @@ def server_edit(request,id):
 
     return render(request,'assets/server_edit.html',context=locals())
 
+@has_auth('add_host')
 @login_required()
 def server_add(request):
     header_title = [
@@ -51,6 +55,7 @@ def server_add(request):
             print(form)
     return render(request,'assets/server_add.html',context=locals())
 
+@has_auth('bat_add_host')
 @login_required()
 def server_add_batch(request):
     header_title = [
@@ -76,6 +81,7 @@ def server_add_batch(request):
 
     return render(request, 'assets/server_add_batch.html',locals())
 
+@has_auth('delete_host')
 @login_required()
 def server_del(request):
     '''
@@ -100,7 +106,7 @@ def server_del(request):
 
         return HttpResponse(json.dumps(res,ensure_ascii=False))
 
-
+@has_auth('update_host')
 @login_required()
 def server_change_status(request):
 
@@ -125,7 +131,7 @@ def server_change_status(request):
 
         return HttpResponse(json.dumps(res,ensure_ascii=False))
 
-
+@has_auth('idc_list')
 @login_required()
 def idc_list(request):
 
@@ -139,6 +145,7 @@ def idc_list(request):
 
     return render(request,'assets/idc_list.html',locals())
 
+@has_auth('idc_add')
 @login_required()
 def idc_add(request):
     header_title = [
@@ -156,6 +163,7 @@ def idc_add(request):
 
     return render(request,'assets/idc_add.html',locals())
 
+@has_auth('idc_del')
 @login_required()
 def idc_del(request):
     if request.method == "DELETE":
@@ -179,33 +187,34 @@ def idc_del(request):
     return HttpResponse('ok')
     # return render(request,'assets/server_list.html',locals())
 
+@has_auth('idc_edit')
 @login_required()
-def idc_edit(request,id):
+def idc_edit(request,id,server_all=None):
     header_title = [
         "机房管理","修改机房"
     ]
     title = header_title[-1]
+    server_all = get_node_list(request)
 
     form = IdcForm(instance=IDC.objects.get(uuid=id))
-    host_all = Server.objects.all()
-    host_select = Server.objects.filter(idc_name=IDC.objects.get(uuid=id))
-    host_no_select = [a for a in host_all if a not in host_select]
+
+    host_select = server_all.filter(idc_name=IDC.objects.get(uuid=id))
+    host_no_select = [a for a in server_all if a not in host_select]
     if request.method == "POST":
         form = IdcForm(request.POST,instance=IDC.objects.get(uuid=id))
+        # print(form)
         if form.is_valid():
-            if len(request.POST.getlist('host_select')) > 0:
-                Server.objects.filter(pk__in=request.POST.getlist('host_select')).update(idc_name=IDC.objects.get(pk=id))
-            else:
-                print(1)
-                IDC.objects.get(uuid=id).server_set.none()
+            host_select = request.POST.getlist('hostSelect')
+            # host_no_select = request.POST.getlist('hostNoSelect')
+            idcObj = IDC.objects.get(uuid = id)
+            Server.objects.filter(uuid__in=host_select).update(idc_name=idcObj)
             form.save()
             return redirect('idc_list')
         else:
-            print(form)
-
+            print('form err')
     return render(request,'assets/idc_edit.html',locals())
 
-
+@has_auth('project_list')
 @login_required()
 def project_list(request):
 
@@ -218,6 +227,7 @@ def project_list(request):
 
     return render(request, 'assets/project_list.html', context=locals())
 
+@has_auth('project_add')
 @login_required()
 def project_add(request):
 
@@ -237,6 +247,7 @@ def project_add(request):
 
     return render(request, 'assets/project_add.html', context=locals())
 
+@has_auth('project_edit')
 @login_required()
 def project_edit(request,id):
     header_title = [
@@ -246,28 +257,28 @@ def project_edit(request,id):
     form = ProjectFrom(instance=Project.objects.get(uuid=id))
     project = Project.objects.get(uuid=id)
 
-    host_all = Server.objects.all()
+    host_all = get_node_list(request)
 
-    host_select = Server.objects.filter(project=project)
+    host_select = host_all.filter(project=project)
     host_no_select = [a for a in host_all if a not in host_select]
 
     if request.method == "POST":
         form = ProjectFrom(request.POST,instance=Project.objects.get(uuid=id))
 
         if form.is_valid():
-            project.server_set.clear()
-            s_host = request.POST.getlist('host_select')
-            for h in s_host:
-                host = Server.objects.get(pk=h)
-                project.server_set.add(host)
+            serverSelect = request.POST.getlist('hostSelect')
+            serverNoSelect = request.POST.getlist('hostNoSelect')
+            for h in serverSelect:
+                project.server_set.add(Server.objects.get(uuid=h))
+            for h in serverNoSelect:
+                project.server_set.remove(Server.objects.get(uuid=h))
             form.save()
             return redirect('project_list')
         else:
             print(form)
-
-
     return render(request, 'assets/project_edit.html', context=locals())
 
+@has_auth('label_list')
 @login_required()
 def label_list(request):
 
@@ -279,6 +290,7 @@ def label_list(request):
 
     return render(request, 'assets/label_list.html', context=locals())
 
+@has_auth('label_add')
 @login_required()
 def lable_add(request):
     header_title = [
@@ -291,12 +303,13 @@ def lable_add(request):
         form  = LabelForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('tag_list')
+            return redirect('lable_list')
         else:
             print(form)
 
     return render(request,'assets/lable_add.html',context=locals())
 
+@has_auth('label_edit')
 @login_required()
 def lable_edit(request,id):
     header_title = [
@@ -308,23 +321,22 @@ def lable_edit(request,id):
 
     form = LabelForm(instance=label)
 
-    host_all = Server.objects.all()
-    host_select = Server.objects.filter(label=label)
+    host_all = get_node_list(request)
+    host_select = host_all.filter(label=label)
     host_no_select = [a for a in host_all if a not in host_select]
 
     if request.method == "POST":
-        form = LabelForm(request.POST,instance=label.objects.get(uuid=id))
+        form = LabelForm(request.POST,instance=Label.objects.get(uuid=id))
         if form.is_valid():
-            label.server_set.clear()
-            s_host = request.POST.getlist('host_select')
-            for h in s_host:
-                host = Server.objects.get(pk=h)
-                print(host)
-                label.server_set.add(host)
+            serverSelect = request.POST.getlist('hostSelect')
+            serverNoSelect = request.POST.getlist('hostNoSelect')
+            for h in serverSelect:
+                label.server_set.add(Server.objects.get(uuid=h))
+            for h in serverNoSelect:
+                label.server_set.remove(Server.objects.get(uuid=h))
+
 
             form.save()
             return redirect('lable_list')
-
-
     return render(request,'assets/lable_edit.html',locals())
 

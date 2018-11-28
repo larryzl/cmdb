@@ -7,7 +7,7 @@ from ansible.inventory.manager import InventoryManager
 from ansible.playbook.play import Play
 from ansible.executor.task_queue_manager import TaskQueueManager
 from ansible.plugins.callback import CallbackBase
-from ansible.executor.playbook_executor import  PlaybookExecutor
+from ansible.executor.playbook_executor import PlaybookExecutor
 import ansible.constants as C
 import tempfile
 import os,sys,stat
@@ -36,13 +36,14 @@ class AnsibleHost:
             result += ' ansible_ssh_pass=' + str(self.ansible_ssh_pass)
         if self.ssh_key:
             result += ' ansible_ssh_private_key_file=' + str(self.ssh_key)
-
         return result
 
 class ResultsCollector(CallbackBase):
 
     def __init__(self, *args, **kwargs):
         super(ResultsCollector, self).__init__(*args, **kwargs)
+        self.result = None
+        self.error_msg = None
         self.host_ok = {}
         self.host_unreachable = {}
         self.host_failed = {}
@@ -86,6 +87,11 @@ class AnsibleRunner(object):
                                become=None, become_method=None, become_user=None, check=False, diff=False,
                                host_key_checking=False, listhosts=None, listtasks=None, listtags=None, syntax=None)
 
+        PlaybookOptions = namedtuple('PlaybookOptions',['connection','listhosts','listtasks','listtags','syntax','module_path','become','become_method','become_user', 'check', 'diff','forks','host_key_checking'])
+
+        self.playbookOptions = PlaybookOptions(connection='ssh',listhosts=None,listtasks=None,listtags=None,syntax=None,module_path=None,become=None,become_method=None,become_user=None, check=False, diff=False,forks=10,host_key_checking=False)
+
+
         # initialize needed objects
         self.loader = DataLoader()  # Takes care of finding and reading yaml, json and ini files
         self.passwords = dict(vault_pass='secret')
@@ -104,8 +110,18 @@ class AnsibleRunner(object):
             for host in self.hosts:
                 hosts.append(str(host))
                 i_temp += 1
-            print(hosts)
+            # print(hosts)
             file.write('\n'.join(hosts))
+        # print(self.hosts_file)
+
+
+    def exec_playbook(self, playbooks,args=None):
+        playbook = PlaybookExecutor(playbooks=playbooks,inventory=self.inventory,
+                                    variable_manager=self.variable_manager,loader=self.loader,options=self.playbookOptions,passwords=self.passwords)
+        playbook.run()
+
+
+
 
     def run(self,module_name,module_args=''):
         play_source = {'hosts': 'all', 'gather_facts': 'no', 'tasks': [
@@ -159,23 +175,33 @@ class AnsibleRunner(object):
         if self.hosts_file:
             os.remove(self.hosts_file)
 
-def ansible_run(user_key,server_id,obj,module,cmd=None):
+def ansible_run(user_key,server_id,obj,module,args=None,playbook=None):
     host_list = []
+    #- 创建临时ssh 秘钥文件
     ssh_keyfile = tempfile.mktemp()
     with open(ssh_keyfile, 'w+', encoding='utf-8') as file:file.write(user_key)
     os.chmod(ssh_keyfile,stat.S_IRUSR|stat.S_IWUSR)
+
+    #- 通过uid获取服务器信息
     for uid in server_id.split(','):
+        # print(uid)
         server_obj = obj.get(uuid=uid)
         host_list.append(
                 AnsibleHost(host=server_obj.ip,port=server_obj.ssh_port,connection='ssh',ssh_user=server_obj.ssh_user,ssh_key=ssh_keyfile)
         )
 
     task = AnsibleRunner(host_list)
-    if not cmd:
-        task.run(module)
+    if module == 'playbook':
+        print(playbook)
+        task.exec_playbook(playbook,args=args)
+        result = {'unreachable': {}, 'failed': {}, 'success': {}}
     else:
-        task.run(module,cmd)
-    result = task.get_result()
+        if not args:
+            task.run(module)
+        else:
+            task.run(module,args)
+        result = task.get_result()
+        print(result)
     os.remove(ssh_keyfile)
     return result
 
@@ -192,13 +218,6 @@ if __name__ == "__main__":
             'user':'root',
             'ssh_key':ssh_key
          },
-        {
-            'host':'10.9.99.117',
-            'port':22,
-            'method':'ssh',
-            'user':'root',
-            'ssh_key':ssh_key
-        }
     ]
     host_list = []
 
@@ -206,8 +225,9 @@ if __name__ == "__main__":
         host_list.append(AnsibleHost(host=i['host'],port=i['port'],connection=i['method'],ssh_user=i['user'],ssh_key=i['ssh_key']))
 
     task = AnsibleRunner(host_list)
-    task.run('shell','w')
-    result = task.get_result()
+    task.exec_playbook(["/Users/lei/ops/github/cmdb/ansible_api/test1.yaml"])
+    # task.run('shell','w')
+    # result = task.get_result()
 
     # a = AnsibleRunner()
     # 获取服务器磁盘信息
@@ -215,10 +235,10 @@ if __name__ == "__main__":
     #结果
     # result=a.get_result()
     #成功
-    succ = result['success']
+    # succ = result['success']
     #失败
-    failed = result['failed']
+    # failed = result['failed']
     #不可到达
-    unreachable = result['unreachable']
+    # unreachable = result['unreachable']
 
-    print(succ)
+    # print(succ)

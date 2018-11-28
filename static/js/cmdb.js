@@ -36,10 +36,12 @@ function APIUpdateAttr(props) {
     }).done(function(data, textStatue, jqXHR) {
         if (flash_message) {
             console.log('step 1');
+            console.log(data);
             toastr.success(success_message);
         }
         if (typeof props.success === 'function') {
             console.log('step 2');
+            console.log(data);
             return props.success(data);
         }
 
@@ -68,16 +70,29 @@ function objectActiveChange(obj,name,url,data_table,redirectTo){
             swal("错误","更新"+"[ "+name+" ]"+"遇到错误","error");
         };
         var success = function(){
+            if (!redirectTo) {
+                if(Array.isArray(obj)){
+                    $.each(obj,function(i,j){
+                        $(j).parent().parent().remove();
+                    })
+                }else {
+                    $(obj).parent().parent().remove();
+                }
+            } else {
+                setTimeout('window.location.reload()',2000);
+
+            }
         };
         APIUpdateAttr({
             url: url,
             body: JSON.stringify(body),
             method: "GET",
             success_message: "更新成功",
+            success: success,
             error: fail,
             data_table: data_table
         });
-    };
+    }
     if(name.length == 0){
         swal({
             title: '没有选择项目!',

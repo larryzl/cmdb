@@ -48,8 +48,9 @@ class DepartmentGroup(models.Model):
 
 class department_Mode(models.Model):
 
+    uuid = models.CharField(unique=True,auto_created=True,default=uuid.uuid4,editable=False,max_length=50)
     department_name = models.CharField(max_length=64, blank=True, null=True, verbose_name=u'部门名称',unique=True)
-    description = models.TextField(verbose_name=u"介绍", blank=True, null=True, )
+    description = models.TextField(verbose_name=u"介绍", blank=True, null=True)
     department_admin = models.ForeignKey('CustomUser',blank=True,null=True,related_name='user',verbose_name='部门管理员',on_delete=models.SET_NULL)
     desc_gid = models.IntegerField(verbose_name=u"部门组", choices=auth_gid, blank=True, null=True, )
 
@@ -103,7 +104,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(_('first name'), max_length=30, blank=False)
     last_name = models.CharField(_('last name'), max_length=30, blank=False)
 
-    department = models.ForeignKey(department_Mode, blank=True, null=True,related_name='users', verbose_name="部门",on_delete=models.CASCADE)
+    department = models.ForeignKey(department_Mode, blank=True, null=True,related_name='users', verbose_name="部门",on_delete=models.SET_NULL)
     mobile = models.CharField(_(u'手机'), max_length=30, blank=False,
                               validators=[validators.RegexValidator(r'^[0-9+()-]+$',
                                                                     _('Enter a valid mobile number.'),
@@ -113,7 +114,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     menu_status = models.BooleanField(default=False, verbose_name=u'用户菜单状态')
     user_active = models.BooleanField(verbose_name=u'设置密码状态', default=0)
 
-    uuid = models.CharField(default=uuid.uuid3(uuid.NAMESPACE_DNS,str(hashlib.md5(str(time.time()).encode('utf-8'))) + str("".join(random.choice("1234567890abcefg")))), max_length=64)
+    uuid = models.CharField(default=uuid.uuid3(uuid.NAMESPACE_DNS,str(hashlib.md5(str(time.time()).encode('utf-8'))) + str("".join(random.choice("1234567890abcefg")))), max_length=64,unique=True)
 
     # Admin
     is_staff = models.BooleanField(_('staff status'), default=False,

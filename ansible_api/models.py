@@ -1,4 +1,6 @@
 from django.db import models
+import uuid
+from users.models import CustomUser
 # Create your models here.
 
 class AnsibleServerGroup(models.Model):
@@ -11,3 +13,6 @@ class AnsibleServerGroup(models.Model):
     class Meta:
         verbose_name = "ansible主机组"
         verbose_name_plural = "ansible主机组"
+
+
+
